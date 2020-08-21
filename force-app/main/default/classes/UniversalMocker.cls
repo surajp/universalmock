@@ -29,7 +29,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.mockedClass = mockedClass;
   }
 
-  public UniversalMocker mock(Type mockedClass) {
+  public static UniversalMocker mock(Type mockedClass) {
     return new UniversalMocker(mockedClass);
   }
 

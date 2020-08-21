@@ -20,7 +20,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private String currentMethodName;
   private String currentParamTypesString;
   private Integer expectedCallCount;
-  private Integer forInvocationNumber;
+  private Integer forInvocationNumber = 0;
   private String currentArgumentName;
 
   private UniversalMocker(Type mockedClass) {
@@ -179,7 +179,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     Object returnValue = argumentsMap.get(theKey).get(this.forInvocationNumber).get(this.currentArgumentName);
     this.currentMethodName = null;
     this.currentParamTypesString = null;
-    this.forInvocationNumber = -1;
+    this.forInvocationNumber = 0;
     this.currentArgumentName = null;
     this.getArgumentMode = false;
     return returnValue;

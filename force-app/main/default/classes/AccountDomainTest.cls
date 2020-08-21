@@ -21,7 +21,7 @@ public with sharing class AccountDomainTest {
     AccountDomain acctDomainInstance = new AccountDomain(mockService);
     acctDomainInstance.createPublicAccount('Mock Account');
 
-    Account newAccount = (Account) mock.forMethod('doInsert').andInvocationNumber(0).getArgument('acct').value();
+    Account newAccount = (Account) mock.forMethod('doInsert').andInvocationNumber(0).getValueOf('acct');
 
     system.assertEquals('Mock Account', newAccount.Name);
     system.assertEquals('Public', newAccount.Ownership);

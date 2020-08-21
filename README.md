@@ -20,5 +20,5 @@ A universal mocking class for Apex.
 
 4. Get the argument passed into a method. Use `withParamTypes` for overloaded methods.
 
-  `mockInstance.forMethod('doInsert').andInvocatioNumber(0).getArgument('acct').value();`
+  `mockInstance.forMethod('doInsert').andInvocatioNumber(0).getValueOf('acct');`
 

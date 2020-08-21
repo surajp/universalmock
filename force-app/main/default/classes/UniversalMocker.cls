@@ -1,7 +1,5 @@
 /************************************************************
 
-*** Copyright (c) Vertex Computer Systems Inc. All rights reserved.
-
 *** @author: Suraj Pillai
 *** @group: Test Class
 *** @date: 01/2020
@@ -172,18 +170,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
-  public UniversalMocker getArgument(String paramName) {
+  public Object getValueOf(String paramName) {
     if (!this.getArgumentMode) {
       throw new InvalidOperationException('Method called without calling forMethod first');
     }
     this.currentArgumentName = paramName;
-    return this;
-  }
-
-  public Object value() {
-    if (!this.getArgumentMode) {
-      throw new InvalidOperationException('Method called without calling forMethod first');
-    }
     String theKey = this.getCurrentKey();
     Object returnValue = argumentsMap.get(theKey).get(this.forInvocationNumber).get(this.currentArgumentName);
     this.currentMethodName = null;

@@ -13,7 +13,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private Map<String, Object> mocksMap = new Map<String, Object>();
   private Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
-  private boolean startStubbing = false;
+  private boolean isInSetupMode = false;
   private boolean isInAssertMode = false;
   private boolean getArgumentMode = false;
 
@@ -75,7 +75,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.currentMethodName = null;
     this.currentArgumentName = null;
     this.isInAssertMode = false;
-    this.startStubbing = false;
+    this.isInSetupMode = false;
     this.forInvocationNumber = 0;
   }
 
@@ -86,13 +86,13 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public UniversalMocker when(String stubbedMethodName) {
-    this.startStubbing = true;
+    this.isInSetupMode = true;
     this.currentMethodName = stubbedMethodName;
     return this;
   }
 
   public UniversalMocker withParamTypes(List<Type> paramTypes) {
-    if (!this.startStubbing && !this.isInAssertMode) {
+    if (!this.isInSetupMode && !this.isInAssertMode) {
       throw new InvalidOperationException('Invalid order of calling the api. Must specify method name to mock/assert first');
     }
     this.currentParamTypesString = this.getParamTypesString(paramTypes);
@@ -100,7 +100,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public UniversalMocker thenReturn(Object returnObject) {
-    if (!this.startStubbing) {
+    if (!this.isInSetupMode) {
       throw new InvalidOperationException('Invalid order of operations');
     }
     this.mocksMap.put(getCurrentKey(), returnObject);

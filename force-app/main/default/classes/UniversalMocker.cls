@@ -164,7 +164,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker andInvocationNumber(Integer invocation) {
     if (!this.getArgumentMode) {
-      throw new InvalidOperationException('Method called without calling forMethod first');
+      throw new InvalidOperationException('Method called without calling \'forMethod\' first');
     }
     this.forInvocationNumber = invocation;
     return this;
@@ -172,7 +172,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public Object getValueOf(String paramName) {
     if (!this.getArgumentMode) {
-      throw new InvalidOperationException('Method called without calling forMethod first');
+      throw new InvalidOperationException('Method called without calling \'forMethod\' first');
     }
     this.currentArgumentName = paramName;
     String theKey = this.getCurrentKey();

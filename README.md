@@ -1,16 +1,18 @@
 # Apex Universal Mocker
 
-A universal mocking class for Apex.
+A universal mocking class for Apex, built using the [Apex Stub API](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm), subject to all its limitations.
 
 ## Usage
 
-1. Create an instance of `UniversalMocker` for each class you want to mock.
+### Setup
+
+- Create an instance of `UniversalMocker` for each class you want to mock.
 
   ```java
   UniversalMocker mockInstance = UniversalMocker.mock(AccountDBService.class);
   ```
   
-2. Set mock values you want to return for each method. Use `withParamTypes` for overloaded methods.
+- Set mock values you want to return for each method. Use `withParamTypes` for overloaded methods.
 
   ```java
   mockInstance.when('getOneAccount').thenReturn(mockAccount);
@@ -18,19 +20,21 @@ A universal mocking class for Apex.
               .thenReturn(mockAccount);
   ```
 
-3. Create an instance of the class you want to mock.
+- Create an instance of the class you want to mock.
 
   ```java
   AccountDBService mockDBService = (AccountDBService)mock.createStub();
   ```
   
-3. Assert number of times a method was called.
+### Verification
+
+- Assert number of times a method was called.
 
   ```java
   mockInstance.assertThat().method('getOneAccount').wasCalled(1).timesExactly();
   ```
 
-4. Get the argument passed into a method. Use `withParamTypes` for overloaded methods.
+- Get the argument passed into a method. Use `withParamTypes` for overloaded methods.
 
   ```java
   mockInstance.forMethod('doInsert').andInvocatioNumber(0).getValueOf('acct');

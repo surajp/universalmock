@@ -15,13 +15,15 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private boolean isInSetupMode = false;
   private boolean isInAssertMode = false;
-  private boolean getArgumentMode = false;
+  private boolean isInGetArgumentMode = false;
 
   private String currentMethodName;
   private String currentParamTypesString;
   private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
   private String currentArgumentName;
+
+  private String INVALID_STATE_ERROR_MSG = 'The mock object state is invalid for this operation. Please refer to the docs';
 
   private enum AssertType {
     LESS_OR_EQUAL,
@@ -76,7 +78,12 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.currentArgumentName = null;
     this.isInAssertMode = false;
     this.isInSetupMode = false;
+    this.isInGetArgumentMode = false;
     this.forInvocationNumber = 0;
+  }
+
+  private boolean isAnyModeActive() {
+    return this.isInSetupMode || this.isInAssertMode || this.isInGetArgumentMode;
   }
 
   public void setMock(String stubbedMethodName, Object returnValue) {
@@ -86,6 +93,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public UniversalMocker when(String stubbedMethodName) {
+    if (this.isAnyModeActive()) {
+      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
+    }
     this.isInSetupMode = true;
     this.currentMethodName = stubbedMethodName;
     return this;
@@ -154,6 +164,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public UniversalMocker assertThat() {
+    if (this.isAnyModeActive()) {
+      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
+    }
     this.isInAssertMode = true;
     return this;
   }
@@ -215,13 +228,16 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public UniversalMocker forMethod(String stubbedMethodName) {
-    this.getArgumentMode = true;
+    if (this.isAnyModeActive()) {
+      throw new InvalidOperationException('The object state is invalid for this operation. Please refer to the docs');
+    }
+    this.isInGetArgumentMode = true;
     this.currentMethodName = stubbedMethodName;
     return this;
   }
 
   public UniversalMocker andInvocationNumber(Integer invocation) {
-    if (!this.getArgumentMode) {
+    if (!this.isInGetArgumentMode) {
       throw new InvalidOperationException('Method called without calling \'forMethod\' first');
     }
     this.forInvocationNumber = invocation;
@@ -229,7 +245,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public Object getValueOf(String paramName) {
-    if (!this.getArgumentMode) {
+    if (!this.isInGetArgumentMode) {
       throw new InvalidArgumentException('Method called without calling \'forMethod\' first');
     }
     String theKey = this.getCurrentKey();
@@ -245,7 +261,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public Object getArgumentsMap() {
-    if (!this.getArgumentMode) {
+    if (!this.isInGetArgumentMode) {
       throw new InvalidOperationException('Method called without calling \'forMethod\' first');
     }
     String theKey = this.getCurrentKey();

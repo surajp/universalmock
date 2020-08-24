@@ -24,6 +24,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private String currentArgumentName;
 
   private String INVALID_STATE_ERROR_MSG = 'The mock object state is invalid for this operation. Please refer to the docs';
+  private String KEY_DELIMITER = '||';
 
   private enum AssertType {
     LESS_OR_EQUAL,
@@ -49,19 +50,19 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private String getCurrentKey() {
     String className = this.mockedClass.getName();
-    String retVal = className + '||' + this.currentMethodName;
+    String retVal = className + KEY_DELIMITER + this.currentMethodName;
     if (this.currentParamTypesString != null) {
-      retVal += '||' + this.currentParamTypesString;
+      retVal += KEY_DELIMITER + this.currentParamTypesString;
     }
     return retVal.toLowerCase();
   }
 
   private String getKey(String className, String methodName) {
-    return (className + '||' + methodName).toLowerCase();
+    return (className + KEY_DELIMITER + methodName).toLowerCase();
   }
 
   private String getKey(String className, String methodName, List<Type> paramTypes) {
-    return (className + '||' + methodName + '||' + this.getParamTypesString(paramTypes)).toLowerCase();
+    return (className + KEY_DELIMITER + methodName + KEY_DELIMITER + this.getParamTypesString(paramTypes)).toLowerCase();
   }
 
   private String getParamTypesString(List<Type> paramTypes) {
@@ -72,7 +73,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return String.join(classNames, '-');
   }
 
-  private void resetCurrentKeys() {
+  private void resetState() {
     this.currentParamTypesString = null;
     this.currentMethodName = null;
     this.currentArgumentName = null;
@@ -103,7 +104,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker withParamTypes(List<Type> paramTypes) {
     if (!this.isInSetupMode && !this.isInAssertMode) {
-      throw new InvalidOperationException('Invalid order of calling the api. Must specify method name to mock/assert first');
+      throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
     }
     this.currentParamTypesString = this.getParamTypesString(paramTypes);
     return this;
@@ -111,11 +112,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker thenReturn(Object returnObject) {
     if (!this.isInSetupMode) {
-      throw new InvalidOperationException('Invalid order of operations');
+      throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
     }
     this.mocksMap.put(getCurrentKey(), returnObject);
     this.callCountsMap.put(getCurrentKey(), 0);
-    this.resetCurrentKeys();
+    this.resetState();
     return this;
   }
 
@@ -173,7 +174,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker method(String methodName) {
     if (!this.isInAssertMode) {
-      throw new InvalidOperationException('Method called without calling assertThat first');
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
     }
     this.currentMethodName = methodName;
     return this;
@@ -181,7 +182,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker wasCalled(Integer expectedCallCount) {
     if (!this.isInAssertMode) {
-      throw new InvalidOperationException('Method called without calling assertThat first');
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
     }
     this.expectedCallCount = expectedCallCount;
     return this;
@@ -191,7 +192,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     String currentKey = getCurrentKey();
     Integer actualCallCount = this.callCountsMap.get(currentKey);
     String methodName = this.currentMethodName;
-    this.resetCurrentKeys();
+    this.resetState();
     switch on asserTypeValue {
       when LESS_OR_EQUAL {
         system.assert(
@@ -229,7 +230,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker forMethod(String stubbedMethodName) {
     if (this.isAnyModeActive()) {
-      throw new InvalidOperationException('The object state is invalid for this operation. Please refer to the docs');
+      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
     }
     this.isInGetArgumentMode = true;
     this.currentMethodName = stubbedMethodName;
@@ -256,7 +257,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
       );
     }
     Object returnValue = paramsMap.get(paramName);
-    this.resetCurrentKeys();
+    this.resetState();
     return returnValue;
   }
 
@@ -266,7 +267,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
     String theKey = this.getCurrentKey();
     Map<String, Object> returnValue = argumentsMap.get(theKey).get(this.forInvocationNumber);
-    this.resetCurrentKeys();
+    this.resetState();
     return returnValue;
   }
 

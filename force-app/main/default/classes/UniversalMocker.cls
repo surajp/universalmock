@@ -141,7 +141,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
 
     for (Integer i = 0; i < listOfParamNames.size(); i++) {
-      currentArgsMap.put(listOfParamNames[i], listOfArgs[i]);
+      currentArgsMap.put(listOfParamNames[i].toLowerCase(), listOfArgs[i]);
     }
   }
 
@@ -239,7 +239,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public UniversalMocker andInvocationNumber(Integer invocation) {
     if (!this.isInGetArgumentMode) {
-      throw new InvalidOperationException('Method called without calling \'forMethod\' first');
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
     }
     this.forInvocationNumber = invocation;
     return this;
@@ -247,7 +247,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public Object getValueOf(String paramName) {
     if (!this.isInGetArgumentMode) {
-      throw new InvalidArgumentException('Method called without calling \'forMethod\' first');
+      throw new InvalidArgumentException('Invalid order of operations. Method called without calling \'forMethod\' first');
     }
     String theKey = this.getCurrentKey();
     Map<String, Object> paramsMap = argumentsMap.get(theKey).get(this.forInvocationNumber);
@@ -256,14 +256,14 @@ public with sharing class UniversalMocker implements System.StubProvider {
         String.format('Param name \'${0}\' not found for the method \'${1}\'', new List<String>{ paramName, this.currentMethodName })
       );
     }
-    Object returnValue = paramsMap.get(paramName);
+    Object returnValue = paramsMap.get(paramName.toLowerCase());
     this.resetState();
     return returnValue;
   }
 
   public Object getArgumentsMap() {
     if (!this.isInGetArgumentMode) {
-      throw new InvalidOperationException('Method called without calling \'forMethod\' first');
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
     }
     String theKey = this.getCurrentKey();
     Map<String, Object> returnValue = argumentsMap.get(theKey).get(this.forInvocationNumber);

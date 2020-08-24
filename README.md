@@ -18,17 +18,16 @@ A universal mocking class for Apex.
               .thenReturn(mockAccount);
   ```
 
-3. Create an instance of the class you want to mock, using an instance of `UniversalMocker` and Apex Stub API
+3. Create an instance of the class you want to mock.
 
   ```java
-  AccountDBService mockDBService = (AccountDBService)Test
-                                    .createStub(AccountDBService.class,mockInstance);
+  AccountDBService mockDBService = (AccountDBService)mock.createStub();
   ```
   
 3. Assert number of times a method was called.
 
   ```java
-  mockInstance.assertThat().method('getOneAccount').wasCalled(1).times();
+  mockInstance.assertThat().method('getOneAccount').wasCalled(1).timesExactly();
   ```
 
 4. Get the argument passed into a method. Use `withParamTypes` for overloaded methods.
@@ -36,4 +35,11 @@ A universal mocking class for Apex.
   ```java
   mockInstance.forMethod('doInsert').andInvocatioNumber(0).getValueOf('acct');
   ```
+
+## Notes
+
+1. Method and argument names are case-insensitive.
+2. If you don't have overloaded methods, it is recommended to not use `withParamTypes`. Conversely, if you do have overloaded methods,
+ it is recommended that you do use `withParamTypes` for mocking as well as verification.
+3. If you use `withParamTypes` for setting up the mock, you need to use it for verification and fetching method arguments as well.
 

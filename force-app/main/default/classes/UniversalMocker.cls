@@ -109,7 +109,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
-  private String getKeyToUseForCurrentCall(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes) {
+  private String determineKeyToUseForCurrentStubbedMethod(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes) {
     String mockedClass = this.getClassNameFromStubbedObjectName(stubbedObject);
     String keyWithoutParamTypes = getKey(mockedClass, stubbedMethodName);
     String keyWithParamTypes = getKey(mockedClass, stubbedMethodName, listOfParamTypes);
@@ -142,7 +142,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     List<String> listOfParamNames,
     List<Object> listOfArgs
   ) {
-    String keyInUse = this.getKeyToUseForCurrentCall(stubbedObject, stubbedMethodName, listOfParamTypes);
+    String keyInUse = this.determineKeyToUseForCurrentStubbedMethod(stubbedObject, stubbedMethodName, listOfParamTypes);
     this.incrementCallCount(keyInUse);
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
 

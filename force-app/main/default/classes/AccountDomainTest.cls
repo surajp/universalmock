@@ -9,7 +9,10 @@ public with sharing class AccountDomainTest {
 
     AccountDBService mockService = (AccountDBService) mock.createStub();
     AccountDomain acctDomainInstance = new AccountDomain(mockService);
+
+    Test.startTest();
     Account accountDetail = acctDomainInstance.getAccountDetail();
+    Test.stopTest();
 
     system.assertEquals(mockAccount.Name, accountDetail.Name);
     mock.assertThat().method(mockedMethodName).wasCalled(1).timesExactly();
@@ -21,11 +24,37 @@ public with sharing class AccountDomainTest {
     UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
     AccountDBService mockService = (AccountDBService) mock.createStub();
     AccountDomain acctDomainInstance = new AccountDomain(mockService);
+
+    Test.startTest();
     acctDomainInstance.createPublicAccount('Mock Account');
+    Test.stopTest();
 
     Account newAccount = (Account) mock.forMethod(mockedMethodName).andInvocationNumber(0).getValueOf('acct');
 
     system.assertEquals('Mock Account', newAccount.Name);
     system.assertEquals('Public', newAccount.Ownership);
+  }
+
+  @isTest
+  public static void it_should_verify_call_counts_correctly() {
+    String mockedMethodName = 'getOneAccount';
+    Account mockAccount = new Account(Name = 'Mock Account');
+    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
+    mock.when(mockedMethodName).thenReturn(mockAccount);
+
+    AccountDBService mockService = (AccountDBService) mock.createStub();
+    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+
+    Test.startTest();
+    Account accountDetail = acctDomainInstance.getAccountDetail();
+    acctDomainInstance.getAccountDetail();
+    Test.stopTest();
+
+    system.assertEquals(mockAccount.Name, accountDetail.Name);
+    mock.assertThat().method(mockedMethodName).wasCalled(1).timesOrMore();
+    mock.assertThat().method(mockedMethodName).wasCalled(2).timesOrMore();
+    mock.assertThat().method(mockedMethodName).wasCalled(2).timesExactly();
+    mock.assertThat().method(mockedMethodName).wasCalled(2).timesOrLess();
+    mock.assertThat().method(mockedMethodName).wasCalled(3).timesOrLess();
   }
 }

@@ -182,7 +182,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     switch on asserTypeValue {
       when LESS_OR_EQUAL {
         system.assert(
-          this.expectedCallCount <= actualCallCount,
+          this.expectedCallCount >= actualCallCount,
           'Expected call count for method ' +
           methodName +
           ' is not more than or equal to the actual count'
@@ -190,7 +190,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
       }
       when MORE_OR_EQUAL {
         system.assert(
-          this.expectedCallCount >= actualCallCount,
+          this.expectedCallCount <= actualCallCount,
           'Expected call count for method ' +
           methodName +
           ' is not more than or equal to the actual count'

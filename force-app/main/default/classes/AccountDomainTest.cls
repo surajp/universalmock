@@ -72,8 +72,8 @@ public with sharing class AccountDomainTest {
 
     Test.startTest();
     Id mockAccountId = '001000000000001';
-    List<Account> acctsWithMatchingId = acctDomainInstance.getMachingAccounts(mockAccountId);
-    List<Account> acctsWithMatchingName = acctDomainInstance.getMachingAccounts('Account with matching name');
+    List<Account> acctsWithMatchingId = acctDomainInstance.getMatchingAccounts(mockAccountId);
+    List<Account> acctsWithMatchingName = acctDomainInstance.getMatchingAccounts('Account with matching name');
     Test.stopTest();
 
     mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1).timesExactly();

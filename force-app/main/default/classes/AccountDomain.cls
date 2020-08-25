@@ -18,7 +18,7 @@ public with sharing class AccountDomain {
     this.acctService.doInsert(acct);
   }
 
-  public Account[] getMachingAccounts(String attribute) {
+  public Account[] getMatchingAccounts(String attribute) {
     if (attribute instanceof Id) {
       return this.acctService.getMatchingAccounts(Id.valueOf(attribute));
     } else {

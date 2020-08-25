@@ -103,7 +103,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public UniversalMocker withParamTypes(List<Type> paramTypes) {
-    if (!this.isInSetupMode && !this.isInAssertMode) {
+    if (!this.isAnyModeActive()) {
       throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
     }
     this.currentParamTypesString = this.getParamTypesString(paramTypes);
@@ -251,10 +251,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
     String theKey = this.getCurrentKey();
     Map<String, Object> paramsMap = argumentsMap.get(theKey).get(this.forInvocationNumber);
-    if (!paramsMap.containsKey(paramName)) {
-      throw new InvalidOperationException(
-        String.format('Param name \'${0}\' not found for the method \'${1}\'', new List<String>{ paramName, this.currentMethodName })
-      );
+    if (!paramsMap.containsKey(paramName.toLowerCase())) {
+      throw new InvalidOperationException(String.format('Param name {0} not found for the method {1}', new List<Object>{ paramName, this.currentMethodName }));
     }
     Object returnValue = paramsMap.get(paramName.toLowerCase());
     this.resetState();

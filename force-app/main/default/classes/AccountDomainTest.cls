@@ -57,4 +57,28 @@ public with sharing class AccountDomainTest {
     mock.assertThat().method(mockedMethodName).wasCalled(2).timesOrLess();
     mock.assertThat().method(mockedMethodName).wasCalled(3).timesOrLess();
   }
+
+  @isTest
+  public static void it_should_call_overloaded_methods_correctly() {
+    String mockedMethodName = 'getMatchingAccounts';
+    Account acctOne = new Account(Name = 'Account with matching Id');
+    Account acctTwo = new Account(Name = 'Account with matching name');
+    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
+    mock.when(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).thenReturn(new List<Account>{ acctOne });
+    mock.when(mockedMethodName).withParamTypes(new List<Type>{ String.class }).thenReturn(new List<Account>{ acctTwo });
+
+    AccountDBService mockService = (AccountDBService) mock.createStub();
+    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+
+    Test.startTest();
+    Id mockAccountId = '001000000000001';
+    List<Account> acctsWithMatchingId = acctDomainInstance.getMachingAccounts(mockAccountId);
+    List<Account> acctsWithMatchingName = acctDomainInstance.getMachingAccounts('Account with matching name');
+    Test.stopTest();
+
+    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1).timesExactly();
+    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1).timesExactly();
+    System.assertEquals(acctOne.Name, acctsWithMatchingId[0].Name);
+    System.assertEquals(acctTwo.Name, acctsWithMatchingName[0].Name);
+  }
 }

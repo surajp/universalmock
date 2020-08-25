@@ -13,9 +13,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private Map<String, Object> mocksMap = new Map<String, Object>();
   private Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
-  private boolean isInSetupMode = false;
-  private boolean isInAssertMode = false;
-  private boolean isInGetArgumentMode = false;
+  private Boolean isInSetupMode = false;
+  private Boolean isInAssertMode = false;
+  private Boolean isInGetArgumentMode = false;
 
   private String currentMethodName;
   private String currentParamTypesString;

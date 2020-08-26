@@ -8,10 +8,10 @@
 */
 @isTest
 public with sharing class UniversalMocker implements System.StubProvider {
-  private Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
-  private Type mockedClass;
-  private Map<String, Object> mocksMap = new Map<String, Object>();
-  private Map<String, Integer> callCountsMap = new Map<String, Integer>();
+  private final Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
+  private final Type mockedClass;
+  private final Map<String, Object> mocksMap = new Map<String, Object>();
+  private final Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
   private Boolean isInSetupMode = false;
   private Boolean isInAssertMode = false;
@@ -21,9 +21,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private String currentParamTypesString;
   private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
-  private String currentArgumentName;
 
-  private String INVALID_STATE_ERROR_MSG = 'The mock object state is invalid for this operation. Please refer to the docs';
+  private String INVALID_STATE_ERROR_MSG = 'The mock object state is invalid for this operation. Please refer to the Readme';
   private String KEY_DELIMITER = '||';
 
   private enum AssertType {
@@ -76,7 +75,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private void resetState() {
     this.currentParamTypesString = null;
     this.currentMethodName = null;
-    this.currentArgumentName = null;
     this.isInAssertMode = false;
     this.isInSetupMode = false;
     this.isInGetArgumentMode = false;
@@ -88,9 +86,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public void setMock(String stubbedMethodName, Object returnValue) {
-    String key = getKey(this.mockedClass.getName(), stubbedMethodName);
-    mocksMap.put(key, returnValue);
-    callCountsMap.put(key, 0);
+    String key = this.getKey(this.mockedClass.getName(), stubbedMethodName);
+    this.mocksMap.put(key, returnValue);
+    this.callCountsMap.put(key, 0);
   }
 
   public UniversalMocker when(String stubbedMethodName) {
@@ -114,30 +112,30 @@ public with sharing class UniversalMocker implements System.StubProvider {
     if (!this.isInSetupMode) {
       throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
     }
-    this.mocksMap.put(getCurrentKey(), returnObject);
-    this.callCountsMap.put(getCurrentKey(), 0);
+    this.mocksMap.put(this.getCurrentKey(), returnObject);
+    this.callCountsMap.put(this.getCurrentKey(), 0);
     this.resetState();
     return this;
   }
 
   private String determineKeyToUseForCurrentStubbedMethod(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes) {
     String mockedClass = this.getClassNameFromStubbedObjectName(stubbedObject);
-    String keyWithoutParamTypes = getKey(mockedClass, stubbedMethodName);
-    String keyWithParamTypes = getKey(mockedClass, stubbedMethodName, listOfParamTypes);
-    return callCountsMap.containsKey(keyWithParamTypes) ? keyWithParamTypes : keyWithoutParamTypes;
+    String keyWithoutParamTypes = this.getKey(mockedClass, stubbedMethodName);
+    String keyWithParamTypes = this.getKey(mockedClass, stubbedMethodName, listOfParamTypes);
+    return this.callCountsMap.containsKey(keyWithParamTypes) ? keyWithParamTypes : keyWithoutParamTypes;
   }
 
   private void incrementCallCount(String key) {
-    Integer count = callCountsMap.containsKey(key) ? callCountsMap.get(key) : 0;
-    callCountsMap.put(key, count + 1);
+    Integer count = this.callCountsMap.containsKey(key) ? this.callCountsMap.get(key) : 0;
+    this.callCountsMap.put(key, count + 1);
   }
 
   private void saveArguments(List<String> listOfParamNames, List<Object> listOfArgs, String key) {
     Map<String, Object> currentArgsMap = new Map<String, Object>();
-    if (!argumentsMap.containsKey(key)) {
-      argumentsMap.put(key, new List<Map<String, Object>>{ currentArgsMap });
+    if (!this.argumentsMap.containsKey(key)) {
+      this.argumentsMap.put(key, new List<Map<String, Object>>{ currentArgsMap });
     } else {
-      argumentsMap.get(key).add(currentArgsMap);
+      this.argumentsMap.get(key).add(currentArgsMap);
     }
 
     for (Integer i = 0; i < listOfParamNames.size(); i++) {
@@ -148,7 +146,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   public Object handleMethodCall(
     Object stubbedObject,
     String stubbedMethodName,
-    Type returnType,
+    Type currentlyUnused,
     List<Type> listOfParamTypes,
     List<String> listOfParamNames,
     List<Object> listOfArgs
@@ -157,7 +155,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.incrementCallCount(keyInUse);
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
 
-    Object returnValue = mocksMap.get(keyInUse);
+    Object returnValue = this.mocksMap.get(keyInUse);
     if (returnValue instanceof Exception) {
       throw (Exception) returnValue;
     }
@@ -189,31 +187,25 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private void assertCallCount(AssertType asserTypeValue) {
-    String currentKey = getCurrentKey();
+    String currentKey = this.getCurrentKey();
     Integer actualCallCount = this.callCountsMap.get(currentKey);
     String methodName = this.currentMethodName;
     this.resetState();
     switch on asserTypeValue {
       when LESS_OR_EQUAL {
-        system.assert(
-          this.expectedCallCount >= actualCallCount,
-          'Expected call count for method ' +
-          methodName +
-          ' is not more than or equal to the actual count'
-        );
+        system.assert(this.expectedCallCount >= actualCallCount, this.debugCallCountEquals(methodName, 'less than or equal'));
       }
       when MORE_OR_EQUAL {
-        system.assert(
-          this.expectedCallCount <= actualCallCount,
-          'Expected call count for method ' +
-          methodName +
-          ' is not more than or equal to the actual count'
-        );
+        system.assert(this.expectedCallCount <= actualCallCount, this.debugCallCountEquals(methodName, 'more than or equal'));
       }
       when else {
-        system.assertEquals(this.expectedCallCount, actualCallCount, 'Expected call count for method ' + methodName + ' is not equal to the actual count');
+        system.assertEquals(this.expectedCallCount, actualCallCount, this.debugCallCountEquals(methodName, 'equal'));
       }
     }
+  }
+
+  private String debugCallCountEquals(String methodName, String comparison) {
+    return String.format('Expected call count for method {0} is not {1} to the actual count', new List<String>{ methodName, comparison });
   }
 
   public void timesOrMore() {
@@ -247,12 +239,12 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public Object getValueOf(String paramName) {
     if (!this.isInGetArgumentMode) {
-      throw new InvalidArgumentException('Invalid order of operations. Method called without calling \'forMethod\' first');
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
     }
     String theKey = this.getCurrentKey();
     Map<String, Object> paramsMap = argumentsMap.get(theKey).get(this.forInvocationNumber);
     if (!paramsMap.containsKey(paramName.toLowerCase())) {
-      throw new InvalidOperationException(String.format('Param name {0} not found for the method {1}', new List<Object>{ paramName, this.currentMethodName }));
+      throw new IllegalArgumentException(String.format('Param name {0} not found for the method {1}', new List<Object>{ paramName, this.currentMethodName }));
     }
     Object returnValue = paramsMap.get(paramName.toLowerCase());
     this.resetState();
@@ -264,14 +256,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
       throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
     }
     String theKey = this.getCurrentKey();
-    Map<String, Object> returnValue = argumentsMap.get(theKey).get(this.forInvocationNumber);
+    Map<String, Object> returnValue = this.argumentsMap.get(theKey).get(this.forInvocationNumber);
     this.resetState();
     return returnValue;
   }
 
   public class InvalidOperationException extends Exception {
-  }
-
-  public class InvalidArgumentException extends Exception {
   }
 }

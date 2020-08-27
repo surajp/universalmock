@@ -19,7 +19,7 @@ public with sharing class AccountDomainTest {
 
     //verify
     system.assertEquals(mockAccount.Name, accountDetail.Name);
-    mock.assertThat().method(mockedMethodName).wasCalled(1).timesExactly();
+    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.EXACTLY);
   }
 
   @isTest
@@ -62,11 +62,11 @@ public with sharing class AccountDomainTest {
 
     //verify
     system.assertEquals(mockAccount.Name, accountDetail.Name);
-    mock.assertThat().method(mockedMethodName).wasCalled(1).timesOrMore();
-    mock.assertThat().method(mockedMethodName).wasCalled(2).timesOrMore();
-    mock.assertThat().method(mockedMethodName).wasCalled(2).timesExactly();
-    mock.assertThat().method(mockedMethodName).wasCalled(2).timesOrLess();
-    mock.assertThat().method(mockedMethodName).wasCalled(3).timesOrLess();
+    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.OR_MORE);
+    mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_MORE);
+    mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.EXACTLY);
+    mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_LESS);
+    mock.assertThat().method(mockedMethodName).wasCalled(3, UniversalMocker.Times.OR_LESS);
   }
 
   @isTest
@@ -91,8 +91,8 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1).timesExactly();
-    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1).timesExactly();
+    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
     Id accountIdParam = (Id) mock.forMethod(mockedMethodName).andInvocationNumber(0).withParamTypes(new List<Type>{ Id.class }).getValueOf('accountId');
     String acctNameParam = (String) mock.forMethod(mockedMethodName)
       .andInvocationNumber(0)

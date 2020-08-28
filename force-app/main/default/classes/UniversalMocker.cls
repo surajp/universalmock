@@ -22,13 +22,13 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
 
-  private String INVALID_STATE_ERROR_MSG = 'The mock object state is invalid for this operation. Please refer to the Readme';
+  private String INVALID_STATE_ERROR_MSG = 'Mocker object state is invalid for this operation. Please refer to the Readme';
   private String KEY_DELIMITER = '||';
 
-  private enum AssertType {
-    LESS_OR_EQUAL,
-    MORE_OR_EQUAL,
-    EQUAL
+  public enum Times {
+    OR_LESS,
+    OR_MORE,
+    EXACTLY
   }
 
   private UniversalMocker(Type mockedClass) {
@@ -146,11 +146,14 @@ public with sharing class UniversalMocker implements System.StubProvider {
   public Object handleMethodCall(
     Object stubbedObject,
     String stubbedMethodName,
-    Type currentlyUnused,
+    Type returnType, //currently unused
     List<Type> listOfParamTypes,
     List<String> listOfParamNames,
     List<Object> listOfArgs
   ) {
+    if (this.isAnyModeActive()) {
+      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
+    }
     String keyInUse = this.determineKeyToUseForCurrentStubbedMethod(stubbedObject, stubbedMethodName, listOfParamTypes);
     this.incrementCallCount(keyInUse);
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
@@ -178,46 +181,30 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
-  public UniversalMocker wasCalled(Integer expectedCallCount) {
+  public void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
     if (!this.isInAssertMode) {
       throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
     }
     this.expectedCallCount = expectedCallCount;
-    return this;
-  }
-
-  private void assertCallCount(AssertType asserTypeValue) {
     String currentKey = this.getCurrentKey();
     Integer actualCallCount = this.callCountsMap.get(currentKey);
     String methodName = this.currentMethodName;
     this.resetState();
-    switch on asserTypeValue {
-      when LESS_OR_EQUAL {
-        system.assert(this.expectedCallCount >= actualCallCount, this.debugCallCountEquals(methodName, 'less than or equal'));
+    switch on assertTypeValue {
+      when OR_LESS {
+        system.assert(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
       }
-      when MORE_OR_EQUAL {
-        system.assert(this.expectedCallCount <= actualCallCount, this.debugCallCountEquals(methodName, 'more than or equal'));
+      when OR_MORE {
+        system.assert(this.expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
       }
       when else {
-        system.assertEquals(this.expectedCallCount, actualCallCount, this.debugCallCountEquals(methodName, 'equal'));
+        system.assertEquals(this.expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
       }
     }
   }
 
-  private String debugCallCountEquals(String methodName, String comparison) {
+  private String getMethodCallCountAssertMessage(String methodName, String comparison) {
     return String.format('Expected call count for method {0} is not {1} to the actual count', new List<String>{ methodName, comparison });
-  }
-
-  public void timesOrMore() {
-    this.assertCallCount(AssertType.MORE_OR_EQUAL);
-  }
-
-  public void timesOrLess() {
-    this.assertCallCount(AssertType.LESS_OR_EQUAL);
-  }
-
-  public void timesExactly() {
-    this.assertCallCount(AssertType.EQUAL);
   }
 
   public UniversalMocker forMethod(String stubbedMethodName) {

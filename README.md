@@ -11,7 +11,7 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   ```java
   UniversalMocker mockInstance = UniversalMocker.mock(AccountDBService.class);
   ```
-  
+
 - Set mock values you want to return for each method. Use `withParamTypes` for overloaded methods.
 
   ```java
@@ -25,13 +25,15 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   ```java
   AccountDBService mockDBService = (AccountDBService)mock.createStub();
   ```
-  
+
 ### Verification
 
 - Assert number of times a method was called.
 
   ```java
-  mockInstance.assertThat().method('getOneAccount').wasCalled(1).timesExactly();
+  mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.EXACTLY);
+  mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.OR_MORE);
+  mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.OR_LESS);
   ```
 
 - Get the argument passed into a method. Use `withParamTypes` for overloaded methods.
@@ -44,6 +46,7 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 
 1. Method and argument names are case-insensitive.
 2. If you don't have overloaded methods, it is recommended to not use `withParamTypes`. Conversely, if you do have overloaded methods,
- it is recommended that you do use `withParamTypes` for mocking as well as verification.
+   it is recommended that you do use `withParamTypes` for mocking as well as verification.
 3. If you use `withParamTypes` for setting up the mock, you need to use it for verification and fetching method arguments as well.
-
+4. It is highly recommended that you always verify the mocked method call counts to insulate against typos in method names being mocked and any future refactoring.
+5. The glaring limitation in the current version is the inability to mock methods with exact arguments, so this may not work if that's what you're looking to do.

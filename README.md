@@ -1,6 +1,6 @@
 # Apex Universal Mocker
 
-A universal mocking class for Apex, built using the [Apex Stub API](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm), subject to all its limitations. The api design choices for this class have been driven by a desire to make mocking as simple as possible for developers to understand and implement. It favors fluency and readability above all. Consequently, trade-offs have been made such as the limitation noted towards the end of this Readme. 
+A universal mocking class for Apex, built using the [Apex Stub API](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm), subject to all its limitations. The api design choices for this class have been driven by a desire to make mocking as simple as possible for developers to understand and implement. It favors fluency and readability above everything else. Consequently, trade-offs have been made such as the limitation noted towards the end of this Readme. 
 
 ## Installation
 

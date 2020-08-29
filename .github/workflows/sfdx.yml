@@ -16,6 +16,6 @@ jobs:
         with:
           sfdx-auth-url: ${{ secrets.AUTH_SECRET }}
       - name: sfdx-push
-        run: sfdx force:source:push
+        run: sfdx force:source:push -f
       - name: sfdx-test-run
         run: sfdx force:apex:test:run -l RunLocalTests -w 30

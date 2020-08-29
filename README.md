@@ -1,6 +1,6 @@
 # Apex Universal Mocker
 
-A universal mocking class for Apex, built using the [Apex Stub API](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm), subject to all its limitations.
+A universal mocking class for Apex, built using the [Apex Stub API](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm), subject to all its limitations. The api design choices for this class have been driven by a desire to make mocking as simple as possible for developers to understand and implement. It favors fluency and readability above all. Consequently, trade-offs have been made such as the limitation noted towards the end of this Readme. 
 
 ## Installation
 
@@ -55,3 +55,7 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 3. If you use `withParamTypes` for setting up the mock, you need to use it for verification and fetching method arguments as well.
 4. It is highly recommended that you always verify the mocked method call counts to insulate against typos in method names being mocked and any future refactoring.
 5. The glaring limitation in the current version is the inability to mock methods with exact arguments, so this may not work if that's what you're looking to do.
+
+## Contributions
+
+Many thanks to my fellow [SFXD](https://sfxd.github.io/) members [@jamessimone](https://github.com/jamessimone) [@ThieveryShoe](https://github.com/Thieveryshoe) [@jlyon11](https://github.com/jlyon87) [@elements](https://github.com/elements) for their feedback and contribution.

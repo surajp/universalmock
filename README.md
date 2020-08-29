@@ -43,8 +43,8 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 - Get the value of an argument passed into a method. Use `withParamTypes` for overloaded methods.
 
   ```java
-  mockInstance.forMethod('doInsert').andInvocatioNumber(0).getValueOf('acct');
-  mockInstance.forMethod('doInsert').withParamTypes(new List<Type>{Account.class}).andInvocatioNumber(0).getValueOf('acct');
+  mockInstance.forMethod('doInsert').andInvocationNumber(0).getValueOf('acct');
+  mockInstance.forMethod('doInsert').withParamTypes(new List<Type>{Account.class}).andInvocationNumber(0).getValueOf('acct');
   ```
 
 ## Notes

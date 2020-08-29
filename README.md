@@ -2,6 +2,10 @@
 
 A universal mocking class for Apex, built using the [Apex Stub API](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm), subject to all its limitations.
 
+## Installation
+
+- Simply copy the `UniversalMocker.cls` to your org. The `examples` folder merely serves as a reference.
+
 ## Usage
 
 ### Setup
@@ -36,10 +40,11 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.OR_LESS);
   ```
 
-- Get the argument passed into a method. Use `withParamTypes` for overloaded methods.
+- Get the value of an argument passed into a method. Use `withParamTypes` for overloaded methods.
 
   ```java
   mockInstance.forMethod('doInsert').andInvocatioNumber(0).getValueOf('acct');
+  mockInstance.forMethod('doInsert').withParamTypes(new List<Type>{Account.class}).andInvocatioNumber(0).getValueOf('acct');
   ```
 
 ## Notes

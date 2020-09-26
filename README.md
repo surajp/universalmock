@@ -24,6 +24,12 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
               .thenReturn(mockAccount);
   ```
 
+- You can also set up a method to throw an exception
+
+  ```java
+  mockInstance.when('getOneAccount').thenThrow(new MyCustomException());
+  ```
+
 - Create an instance of the class you want to mock.
 
   ```java

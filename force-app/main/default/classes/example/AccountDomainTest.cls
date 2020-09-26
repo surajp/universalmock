@@ -104,4 +104,38 @@ public with sharing class AccountDomainTest {
     System.assertEquals(acctOne.Name, acctsWithMatchingId[0].Name);
     System.assertEquals(acctTwo.Name, acctsWithMatchingName[0].Name);
   }
+
+  @isTest
+  public static void it_should_throw_mock_exception() {
+    String mockedMethodName = 'doInsert';
+
+    String mockExceptionMessage = 'Mock exception';
+
+    //setup
+    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
+    AuraHandledException mockException = new AuraHandledException(mockExceptionMessage);
+
+    /*https://salesforce.stackexchange.com/questions/122657/testing-aurahandledexceptions*/
+    mockException.setMessage(mockExceptionMessage);
+
+    mock.when(mockedMethodName).thenThrow(mockException);
+
+    AccountDBService mockService = (AccountDBService) mock.createStub();
+    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+
+    //test
+    Test.startTest();
+    boolean hasException = false;
+    try {
+      acctDomainInstance.createPublicAccount('Mock Account');
+    } catch (AuraHandledException ex) {
+      System.assertEquals(mockExceptionMessage, ex.getMessage());
+      hasException = true;
+    }
+    Test.stopTest();
+
+    //verify
+    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
+    System.assert(hasException, 'Mocked exception was not thrown');
+  }
 }

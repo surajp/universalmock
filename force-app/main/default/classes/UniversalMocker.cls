@@ -118,6 +118,10 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
+  public UniversalMocker thenThrow(Exception exceptionToThrow) {
+    return this.thenReturn(exceptionToThrow);
+  }
+
   private String determineKeyToUseForCurrentStubbedMethod(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes) {
     String mockedClass = this.getClassNameFromStubbedObjectName(stubbedObject);
     String keyWithoutParamTypes = this.getKey(mockedClass, stubbedMethodName);

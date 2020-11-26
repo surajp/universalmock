@@ -217,7 +217,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.resetState();
     if (actualCallCount != null) {
       this.expectedCallCount = 0;
-      system.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called', new List<String>{ methodName }));
+      system.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
     }
   }
 

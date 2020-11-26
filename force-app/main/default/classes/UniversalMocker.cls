@@ -44,7 +44,14 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private String getClassNameFromStubbedObjectName(Object stubbedObject) {
-    return String.valueOf(stubbedObject).split(':')[0].split('__')[0];
+    String result = 'DateTime';
+    try {
+      DateTime typeCheck = (DateTime) stubbedObject;
+    } catch (System.TypeException te) {
+      String message = te.getMessage().substringAfter('Invalid conversion from runtime type ');
+      result = message.substringBefore(' to Datetime');
+    }
+    return result;
   }
 
   private String getCurrentKey() {
@@ -204,6 +211,20 @@ public with sharing class UniversalMocker implements System.StubProvider {
       when else {
         system.assertEquals(this.expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
       }
+    }
+  }
+
+  public void wasNeverCalled() {
+    if (!this.isInAssertMode) {
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
+    }
+    String currentKey = this.getCurrentKey();
+    Integer actualCallCount = this.callCountsMap.get(currentKey);
+    String methodName = this.currentMethodName;
+    this.resetState();
+    if (actualCallCount != null) {
+      this.expectedCallCount = 0;
+      system.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
     }
   }
 

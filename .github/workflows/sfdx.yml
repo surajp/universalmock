@@ -15,7 +15,5 @@ jobs:
       - uses: sfdx-actions/setup-sfdx@v1
         with:
           sfdx-auth-url: ${{ secrets.AUTH_SECRET }}
-      - name: sfdx-push
-        run: sfdx force:source:push -f
-      - name: sfdx-test-run
-        run: sfdx force:apex:test:run -l RunLocalTests -w 30
+      - name: sfdx-deploy
+        run: sfdx force:source:deploy -p force-app/main/default/classes -l RunSpecifiedTests -r AccountDomainTest -w 30 -c

@@ -46,6 +46,16 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.OR_LESS);
   ```
 
+- Assert that a method was not called. This works both for methods that had mock return values set up before the test 
+  and for ones that didn't.
+
+  ```java
+  mockInstance.assertThat().method('dummyMethod').wasNeverCalled();
+  ```
+
+  Note that `mockInstance.assertThat().method('dummyMethod').wasCalled(0,UniversalMocker.Times.EXACTLY);` would only 
+  work if you had a mock return value set up for `dummyMethod` before running the test.
+
 - Get the value of an argument passed into a method. Use `withParamTypes` for overloaded methods.
 
   ```java

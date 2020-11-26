@@ -50,6 +50,7 @@ public with sharing class AccountDomainTest {
     //setup
     UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
     mock.when(mockedMethodName).thenReturn(mockAccount);
+    mock.when('mockedDummyMethod').thenReturn(null);
 
     AccountDBService mockService = (AccountDBService) mock.createStub();
     AccountDomain acctDomainInstance = new AccountDomain(mockService);
@@ -67,6 +68,8 @@ public with sharing class AccountDomainTest {
     mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.EXACTLY);
     mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_LESS);
     mock.assertThat().method(mockedMethodName).wasCalled(3, UniversalMocker.Times.OR_LESS);
+    mock.assertThat().method('mockedDummyMethod').wasNotCalled();
+    mock.assertThat().method('nonMockedDummyMethod').wasNotCalled();
   }
 
   @isTest

@@ -207,6 +207,20 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
+  public void wasNotCalled() {
+    if (!this.isInAssertMode) {
+      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
+    }
+    String currentKey = this.getCurrentKey();
+    Integer actualCallCount = this.callCountsMap.get(currentKey);
+    String methodName = this.currentMethodName;
+    this.resetState();
+    if (actualCallCount != null) {
+      this.expectedCallCount = 0;
+      system.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called', new List<String>{ methodName }));
+    }
+  }
+
   private String getMethodCallCountAssertMessage(String methodName, String comparison) {
     return String.format('Expected call count for method {0} is not {1} to the actual count', new List<String>{ methodName, comparison });
   }

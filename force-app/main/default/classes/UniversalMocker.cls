@@ -44,7 +44,14 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private String getClassNameFromStubbedObjectName(Object stubbedObject) {
-    return String.valueOf(stubbedObject).split(':')[0].split('__')[0];
+    String result = 'DateTime';
+    try {
+      DateTime typeCheck = (DateTime) stubbedObject;
+    } catch (System.TypeException te) {
+      String message = te.getMessage().substringAfter('Invalid conversion from runtime type ');
+      result = message.substringBefore(' to Datetime');
+    }
+    return result;
   }
 
   private String getCurrentKey() {

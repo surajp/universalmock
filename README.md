@@ -53,11 +53,8 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   mockInstance.assertThat().method('dummyMethod').wasNotCalled();
   ```
 
-  Note: 
-  ```java
-  mockInstance.assertThat().method('dummyMethod').wasCalled(0,UniversalMocker.Times.EXACTLY);
-  ```
-  would only work if you had a mock return value set up for `dummyMethod` before running the test.
+  Note that `mockInstance.assertThat().method('dummyMethod').wasCalled(0,UniversalMocker.Times.EXACTLY);` would only 
+  work if you had a mock return value set up for `dummyMethod` before running the test.
 
 - Get the value of an argument passed into a method. Use `withParamTypes` for overloaded methods.
 

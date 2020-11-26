@@ -50,7 +50,7 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   and for ones that didn't.
 
   ```java
-  mockInstance.assertThat().method('dummyMethod').wasNotCalled();
+  mockInstance.assertThat().method('dummyMethod').wasNeverCalled();
   ```
 
   Note that `mockInstance.assertThat().method('dummyMethod').wasCalled(0,UniversalMocker.Times.EXACTLY);` would only 

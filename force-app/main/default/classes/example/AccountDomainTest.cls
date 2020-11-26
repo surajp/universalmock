@@ -68,8 +68,8 @@ public with sharing class AccountDomainTest {
     mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.EXACTLY);
     mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_LESS);
     mock.assertThat().method(mockedMethodName).wasCalled(3, UniversalMocker.Times.OR_LESS);
-    mock.assertThat().method('mockedDummyMethod').wasNotCalled();
-    mock.assertThat().method('nonMockedDummyMethod').wasNotCalled();
+    mock.assertThat().method('mockedDummyMethod').wasNeverCalled();
+    mock.assertThat().method('nonMockedDummyMethod').wasNeverCalled();
   }
 
   @isTest
@@ -140,5 +140,15 @@ public with sharing class AccountDomainTest {
     //verify
     mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
     System.assert(hasException, 'Mocked exception was not thrown');
+  }
+
+  @isTest
+  public static void dummy_test_for_db_service() {
+    AccountDBService dbSvc = new AccountDBService();
+    Account a = new Account(Name = 'Acme');
+    dbSvc.doInsert(a);
+    dbSvc.getOneAccount();
+    dbSvc.getMatchingAccounts(Id.valueOf('001000000000001'));
+    dbSvc.getMatchingAccounts('Acme');
   }
 }

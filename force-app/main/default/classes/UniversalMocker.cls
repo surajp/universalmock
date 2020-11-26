@@ -207,7 +207,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
-  public void wasNotCalled() {
+  public void wasNeverCalled() {
     if (!this.isInAssertMode) {
       throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
     }

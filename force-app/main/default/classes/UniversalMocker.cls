@@ -119,8 +119,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
     if (!this.isInSetupMode) {
       throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
     }
-    this.mocksMap.put(this.getCurrentKey(), returnObject);
-    this.callCountsMap.put(this.getCurrentKey(), 0);
+    String key = this.getCurrentKey();
+    this.mocksMap.put(key, returnObject);
+    if (!this.callCountsMap.containsKey(key)) {
+      this.callCountsMap.put(key, 0);
+    }
     this.resetState();
     return this;
   }

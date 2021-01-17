@@ -134,6 +134,10 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
+  public UniversalMocker thenReturnVoid() {
+    return this.thenReturn(null);
+  }
+
   public UniversalMocker thenReturn(Object returnObject) {
     if (!this.isInSetupMode) {
       throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');

@@ -145,14 +145,13 @@ public with sharing class AccountDomainTest {
   @isTest
   public static void it_should_mutate_arguments() {
     String mockedMethodName = 'doInsert';
-
     String mockExceptionMessage = 'Mock exception';
 
     //setup
     UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
     UniversalMocker.Mutator dmlMutatorInstance = new DMLMutator();
 
-    mock.when(mockedMethodName).mutateWith(dmlMutatorInstance).thenReturn(null);
+    mock.when(mockedMethodName).mutateWith(dmlMutatorInstance).thenReturnVoid();
 
     AccountDBService mockService = (AccountDBService) mock.createStub();
     AccountDomain acctDomainInstance = new AccountDomain(mockService);

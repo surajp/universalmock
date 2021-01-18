@@ -16,7 +16,7 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   UniversalMocker mockInstance = UniversalMocker.mock(AccountDBService.class);
   ```
 
-- Set mock values you want to return for each method. 
+- Set the mock values you want to return for each method. 
 
   ```java
   mockInstance.when('getOneAccount').thenReturn(mockAccount);
@@ -77,9 +77,12 @@ complete test method [here](./force-app/main/default/classes/example/AccountDoma
   mockInstance.when('doInsert').mutateWith(dmlMutatorInstance).thenReturnVoid();
 ```
 
+**Note**: You can call the `mutateWith` method any number of times in succession, with the same or different mutator instances,
+to create a chain of methods to mutate method arguments.
+
 ### Verification
 
-- Assert number of times a method was called.
+- Assert the number of times a method was called.
 
   ```java
   mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.EXACTLY);
@@ -103,6 +106,9 @@ complete test method [here](./force-app/main/default/classes/example/AccountDoma
   mockInstance.forMethod('doInsert').andInvocationNumber(0).getValueOf('acct');
   mockInstance.forMethod('doInsert').withParamTypes(new List<Type>{Account.class}).andInvocationNumber(0).getValueOf('acct');
   ```
+
+  **Note**: If you use `mutateWith` to mutate the original method arguments, the values returned here are the mutated
+  arguments and not the original method arguments.
 
 ## Notes
 

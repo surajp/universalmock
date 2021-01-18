@@ -33,7 +33,7 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 - Create an instance of the class you want to mock.
 
   ```java
-  AccountDBService mockDBService = (AccountDBService)mock.createStub();
+  AccountDBService mockDBService = (AccountDBService)mockInstance.createStub();
   ```
 
 ### Verification

@@ -143,6 +143,38 @@ public with sharing class AccountDomainTest {
   }
 
   @isTest
+  public static void it_should_mutate_arguments() {
+    String mockedMethodName = 'doInsert';
+    String mockExceptionMessage = 'Mock exception';
+
+    //setup
+    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
+    UniversalMocker.Mutator dmlMutatorInstance = new DMLMutator();
+
+    mock.when(mockedMethodName).mutateWith(dmlMutatorInstance).thenReturnVoid();
+
+    AccountDBService mockService = (AccountDBService) mock.createStub();
+    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+
+    //test
+    Test.startTest();
+    boolean hasException = false;
+    try {
+      acctDomainInstance.createPublicAccount('Mock Account');
+    } catch (AuraHandledException ex) {
+      System.assertEquals(mockExceptionMessage, ex.getMessage());
+      hasException = true;
+    }
+    Test.stopTest();
+
+    //verify
+    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
+    System.assert(!hasException, 'Mocked exception was not thrown');
+    Account acct = (Account) mock.forMethod('doInsert').getValueOf('acct');
+    System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');
+  }
+
+  @isTest
   public static void dummy_test_for_db_service() {
     AccountDBService dbSvc = new AccountDBService();
     Account a = new Account(Name = 'Acme');
@@ -150,5 +182,19 @@ public with sharing class AccountDomainTest {
     dbSvc.getOneAccount();
     dbSvc.getMatchingAccounts(Id.valueOf('001000000000001'));
     dbSvc.getMatchingAccounts('Acme');
+  }
+
+  public class DMLMutator implements UniversalMocker.Mutator {
+    // Ideally, 'fakeCounter' should be a static variable and 'getFakeId' should be a static method in another top-level class.
+    private Integer fakeIdCounter = 1;
+    public String getFakeId(Schema.SObjectType objType) {
+      String result = String.valueOf(this.fakeIdCounter++);
+      return objType.getDescribe().getKeyPrefix() + '0'.repeat(12 - result.length()) + result;
+    }
+
+    public void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs) {
+      Account record = (Account) listOfArgs[0];
+      record.Id = this.getFakeId(Account.SObjectType);
+    }
   }
 }

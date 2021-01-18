@@ -25,6 +25,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private String INVALID_STATE_ERROR_MSG = 'Mocker object state is invalid for this operation. Please refer to the Readme';
   private String KEY_DELIMITER = '||';
 
+  //Map for storing mutators
+  Map<String, List<Mutator>> mutatorMap = new Map<String, List<Mutator>>();
+
   public enum Times {
     OR_LESS,
     OR_MORE,
@@ -115,6 +118,26 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
+  public UniversalMocker mutateWith(Mutator mutatorInstance) {
+    if (!this.isInSetupMode) {
+      throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
+    }
+    String key = this.getCurrentKey();
+    if (this.mutatorMap.containsKey(key)) {
+      this.mutatorMap.get(key).add(mutatorInstance);
+    } else {
+      this.mutatorMap.put(key, new List<Mutator>{ mutatorInstance });
+    }
+    if (!this.callCountsMap.containsKey(key)) {
+      this.callCountsMap.put(key, 0);
+    }
+    return this;
+  }
+
+  public UniversalMocker thenReturnVoid() {
+    return this.thenReturn(null);
+  }
+
   public UniversalMocker thenReturn(Object returnObject) {
     if (!this.isInSetupMode) {
       throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
@@ -173,6 +196,13 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
 
     Object returnValue = this.mocksMap.get(keyInUse);
+
+    if (this.mutatorMap.containsKey(keyInUse)) {
+      for (Mutator m : this.mutatorMap.get(keyInUse)) {
+        m.mutate(stubbedObject, stubbedMethodName, listOfParamTypes, listOfArgs);
+      }
+    }
+
     if (returnValue instanceof Exception) {
       throw (Exception) returnValue;
     }
@@ -277,5 +307,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public class InvalidOperationException extends Exception {
+  }
+
+  public interface Mutator {
+    void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs);
   }
 }

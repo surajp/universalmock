@@ -16,10 +16,15 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   UniversalMocker mockInstance = UniversalMocker.mock(AccountDBService.class);
   ```
 
-- Set mock values you want to return for each method. Use `withParamTypes` for overloaded methods.
+- Set the mock values you want to return for each method. 
 
   ```java
   mockInstance.when('getOneAccount').thenReturn(mockAccount);
+  ```
+
+- Use `withParamTypes` for overloaded methods.
+
+```java
   mockInstance.when('getOneAccount').withParamTypes(new List<Type>{Id.class})
               .thenReturn(mockAccount);
   ```
@@ -33,12 +38,51 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 - Create an instance of the class you want to mock.
 
   ```java
-  AccountDBService mockDBService = (AccountDBService)mock.createStub();
+  AccountDBService mockDBService = (AccountDBService)mockInstance.createStub();
   ```
+
+#### Mutating arguments
+
+There might be instances where you need to modify the original arguments passed into the function. A typical example 
+would be to set the `Id` field of records passed into a method responsible for inserting them.
+
+- Create a class that implements the `UniversalMocker.Mutator` interface. The interface has a single method `mutate`
+with the following signature. 
+
+```java
+  void mutate(
+    Object stubbedObject, String stubbedMethodName,
+    List<Type> listOfParamTypes, List<Object> listOfArgs
+  );
+```
+
+Here's the method for setting fake ids on inserted records, in our example.
+
+```java
+  public void mutate(
+    Object stubbedObject, String stubbedMethodName,
+    List<Type> listOfParamTypes, List<Object> listOfArgs
+  ) {
+      Account record = (Account) listOfArgs[0];
+      record.Id = this.getFakeId(Account.SObjectType);
+  }
+```
+Check out the [AccountDomainTest](./force-app/main/default/classes/example/AccountDomainTest.cls#L187) class for the 
+full example.
+
+- Pass in an instance of your implementation of the `Mutator` class to mutate the method arguments. Check out the 
+complete test method [here](./force-app/main/default/classes/example/AccountDomainTest.cls#L146)
+
+```java
+  mockInstance.when('doInsert').mutateWith(dmlMutatorInstance).thenReturnVoid();
+```
+
+**Note**: You can call the `mutateWith` method any number of times in succession, with the same or different mutator instances,
+to create a chain of methods to mutate method arguments.
 
 ### Verification
 
-- Assert number of times a method was called.
+- Assert the number of times a method was called.
 
   ```java
   mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.EXACTLY);
@@ -62,6 +106,9 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   mockInstance.forMethod('doInsert').andInvocationNumber(0).getValueOf('acct');
   mockInstance.forMethod('doInsert').withParamTypes(new List<Type>{Account.class}).andInvocationNumber(0).getValueOf('acct');
   ```
+
+  **Note**: If you use `mutateWith` to mutate the original method arguments, the values returned here are the mutated
+  arguments and not the original method arguments.
 
 ## Notes
 

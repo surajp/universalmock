@@ -16,10 +16,15 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   UniversalMocker mockInstance = UniversalMocker.mock(AccountDBService.class);
   ```
 
-- Set mock values you want to return for each method. Use `withParamTypes` for overloaded methods.
+- Set mock values you want to return for each method. 
 
   ```java
   mockInstance.when('getOneAccount').thenReturn(mockAccount);
+  ```
+
+- Use `withParamTypes` for overloaded methods.
+
+```java
   mockInstance.when('getOneAccount').withParamTypes(new List<Type>{Id.class})
               .thenReturn(mockAccount);
   ```
@@ -35,6 +40,42 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   ```java
   AccountDBService mockDBService = (AccountDBService)mockInstance.createStub();
   ```
+
+#### Mutating arguments
+
+There might be instances where you need to modify the original arguments passed into the function. A typical example 
+would be to set the `Id` field of records passed into a method responsible for inserting them.
+
+- Create a class that implements the `UniversalMocker.Mutator` interface. The interface has a single method `mutate`
+with the following signature. 
+
+```java
+  void mutate(
+    Object stubbedObject, String stubbedMethodName,
+    List<Type> listOfParamTypes, List<Object> listOfArgs
+  );
+```
+
+Here's the method for setting fake ids on inserted records, in our example.
+
+```java
+  public void mutate(
+    Object stubbedObject, String stubbedMethodName,
+    List<Type> listOfParamTypes, List<Object> listOfArgs
+  ) {
+      Account record = (Account) listOfArgs[0];
+      record.Id = this.getFakeId(Account.SObjectType);
+  }
+```
+Check out the [AccountDomainTest](./force-app/main/default/classes/example/AccountDomainTest.cls#L187) class for the 
+full example.
+
+- Pass in an instance of your implementation of the `Mutator` class to mutate the method arguments. Check out the 
+complete test method [here](./force-app/main/default/classes/example/AccountDomainTest.cls#L146)
+
+```java
+  mockInstance.when('doInsert').mutateWith(dmlMutatorInstance).thenReturnVoid();
+```
 
 ### Verification
 

@@ -1,103 +1,98 @@
 @isTest
 public with sharing class AccountDomainTest {
+  
+  private static final UniversalMocker mockService;
+  private static final AccountDBService mockServiceStub;
+  private static final AccountDomain sut; // system under test
+  
+  static {
+    mockService = UniversalMocker.mock(AccountDBService.class);
+    AccountDBService mockService = (AccountDBService) mockService.createStub();
+    sut = new AccountDomain(mockService);
+  }
+  
   @isTest
   public static void it_should_return_one_account() {
-    String mockedMethodName = 'getOneAccount';
-
     //setup
+    String mockedMethodName = 'getOneAccount';
     Account mockAccount = new Account(Name = 'Mock Account');
-    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
-    mock.when(mockedMethodName).thenReturn(mockAccount);
-
-    AccountDBService mockService = (AccountDBService) mock.createStub();
-    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+    
+    mockService.when(mockedMethodName).thenReturn(mockAccount);
 
     //test
     Test.startTest();
-    Account accountDetail = acctDomainInstance.getAccountDetail();
+    Account accountDetail = sut.getAccountDetail();
     Test.stopTest();
 
     //verify
     system.assertEquals(mockAccount.Name, accountDetail.Name);
-    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.EXACTLY);
   }
 
   @isTest
   public static void it_should_create_a_public_account() {
-    String mockedMethodName = 'doInsert';
-
     //setup
-    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
-    AccountDBService mockService = (AccountDBService) mock.createStub();
-    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+    String mockedMethodName = 'doInsert';
 
     //test
     Test.startTest();
-    acctDomainInstance.createPublicAccount('Mock Account');
+    sut.createPublicAccount('Mock Account');
     Test.stopTest();
 
     //verify
-    Account newAccount = (Account) mock.forMethod(mockedMethodName).andInvocationNumber(0).getValueOf('acct');
+    Account newAccount = (Account) mockService.forMethod(mockedMethodName).andInvocationNumber(0).getValueOf('acct');
     system.assertEquals('Mock Account', newAccount.Name);
     system.assertEquals('Public', newAccount.Ownership);
   }
 
   @isTest
   public static void it_should_verify_call_counts_correctly() {
+    //setup
     String mockedMethodName = 'getOneAccount';
     Account mockAccount = new Account(Name = 'Mock Account');
 
-    //setup
-    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
-    mock.when(mockedMethodName).thenReturn(mockAccount);
-    mock.when('mockedDummyMethod').thenReturn(null);
-
-    AccountDBService mockService = (AccountDBService) mock.createStub();
-    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+    mockService.when(mockedMethodName).thenReturn(mockAccount);
+    mockService.when('mockedDummyMethod').thenReturn(null);
 
     //test
     Test.startTest();
-    Account accountDetail = acctDomainInstance.getAccountDetail();
-    acctDomainInstance.getAccountDetail();
+    Account accountDetail = sut.getAccountDetail();
+    sut.getAccountDetail();
     Test.stopTest();
 
     //verify
     system.assertEquals(mockAccount.Name, accountDetail.Name);
-    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.OR_MORE);
-    mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_MORE);
-    mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.EXACTLY);
-    mock.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_LESS);
-    mock.assertThat().method(mockedMethodName).wasCalled(3, UniversalMocker.Times.OR_LESS);
-    mock.assertThat().method('mockedDummyMethod').wasNeverCalled();
-    mock.assertThat().method('nonMockedDummyMethod').wasNeverCalled();
+    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.OR_MORE);
+    mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_MORE);
+    mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_LESS);
+    mockService.assertThat().method(mockedMethodName).wasCalled(3, UniversalMocker.Times.OR_LESS);
+    mockService.assertThat().method('mockedDummyMethod').wasNeverCalled();
+    mockService.assertThat().method('nonMockedDummyMethod').wasNeverCalled();
   }
 
   @isTest
   public static void it_should_call_overloaded_methods_correctly() {
+    //setup
     String mockedMethodName = 'getMatchingAccounts';
     Account acctOne = new Account(Name = 'Account with matching Id');
     Account acctTwo = new Account(Name = 'Account with matching name');
 
-    //setup
-    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
-    mock.when(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).thenReturn(new List<Account>{ acctOne });
-    mock.when(mockedMethodName).withParamTypes(new List<Type>{ String.class }).thenReturn(new List<Account>{ acctTwo });
-
-    AccountDBService mockService = (AccountDBService) mock.createStub();
-    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+    mockService.when(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).thenReturn(new List<Account>{ acctOne });
+    mockService.when(mockedMethodName).withParamTypes(new List<Type>{ String.class }).thenReturn(new List<Account>{ acctTwo });
 
     //test
     Test.startTest();
     Id mockAccountId = '001000000000001';
-    List<Account> acctsWithMatchingId = acctDomainInstance.getMatchingAccounts(mockAccountId);
-    List<Account> acctsWithMatchingName = acctDomainInstance.getMatchingAccounts('Account with matching name');
+    List<Account> acctsWithMatchingId = sut.getMatchingAccounts(mockAccountId);
+    List<Account> acctsWithMatchingName = sut.getMatchingAccounts('Account with matching name');
     Test.stopTest();
 
     //verify
-    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
-    mock.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
-    Id accountIdParam = (Id) mock.forMethod(mockedMethodName).andInvocationNumber(0).withParamTypes(new List<Type>{ Id.class }).getValueOf('accountId');
-    String acctNameParam = (String) mock.forMethod(mockedMethodName)
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    Id accountIdParam = (Id) mockService.forMethod(mockedMethodName).andInvocationNumber(0).withParamTypes(new List<Type>{ Id.class }).getValueOf('accountId');
+    String acctNameParam = (String) mockService.forMethod(mockedMethodName)
       .andInvocationNumber(0)
       .withParamTypes(new List<Type>{ String.class })
       .getValueOf('accountName');
@@ -110,27 +105,20 @@ public with sharing class AccountDomainTest {
 
   @isTest
   public static void it_should_throw_mock_exception() {
-    String mockedMethodName = 'doInsert';
-
-    String mockExceptionMessage = 'Mock exception';
-
     //setup
-    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
+    String mockedMethodName = 'doInsert';
+    String mockExceptionMessage = 'Mock exception';
     AuraHandledException mockException = new AuraHandledException(mockExceptionMessage);
-
     /*https://salesforce.stackexchange.com/questions/122657/testing-aurahandledexceptions*/
     mockException.setMessage(mockExceptionMessage);
 
-    mock.when(mockedMethodName).thenThrow(mockException);
-
-    AccountDBService mockService = (AccountDBService) mock.createStub();
-    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+    mockService.when(mockedMethodName).thenThrow(mockException);
 
     //test
     Test.startTest();
     boolean hasException = false;
     try {
-      acctDomainInstance.createPublicAccount('Mock Account');
+      sut.createPublicAccount('Mock Account');
     } catch (AuraHandledException ex) {
       System.assertEquals(mockExceptionMessage, ex.getMessage());
       hasException = true;
@@ -138,29 +126,24 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
     System.assert(hasException, 'Mocked exception was not thrown');
   }
 
   @isTest
   public static void it_should_mutate_arguments() {
+    //setup
     String mockedMethodName = 'doInsert';
     String mockExceptionMessage = 'Mock exception';
-
-    //setup
-    UniversalMocker mock = UniversalMocker.mock(AccountDBService.class);
     UniversalMocker.Mutator dmlMutatorInstance = new DMLMutator();
 
-    mock.when(mockedMethodName).mutateWith(dmlMutatorInstance).thenReturnVoid();
-
-    AccountDBService mockService = (AccountDBService) mock.createStub();
-    AccountDomain acctDomainInstance = new AccountDomain(mockService);
+    mockService.when(mockedMethodName).mutateWith(dmlMutatorInstance).thenReturnVoid();
 
     //test
     Test.startTest();
     boolean hasException = false;
     try {
-      acctDomainInstance.createPublicAccount('Mock Account');
+      sut.createPublicAccount('Mock Account');
     } catch (AuraHandledException ex) {
       System.assertEquals(mockExceptionMessage, ex.getMessage());
       hasException = true;
@@ -168,9 +151,9 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    mock.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
     System.assert(!hasException, 'Mocked exception was not thrown');
-    Account acct = (Account) mock.forMethod('doInsert').getValueOf('acct');
+    Account acct = (Account) mockService.forMethod('doInsert').getValueOf('acct');
     System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');
   }
 

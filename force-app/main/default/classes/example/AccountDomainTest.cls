@@ -7,8 +7,8 @@ public with sharing class AccountDomainTest {
   
   static {
     mockService = UniversalMocker.mock(AccountDBService.class);
-    AccountDBService mockService = (AccountDBService) mockService.createStub();
-    sut = new AccountDomain(mockService);
+    mockServiceStub = (AccountDBService) mockService.createStub();
+    sut = new AccountDomain(mockServiceStub);
   }
   
   @isTest

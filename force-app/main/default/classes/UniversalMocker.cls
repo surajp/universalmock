@@ -138,7 +138,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
-  public  void wasCalledOnce() {
+  public void wasCalledOnce() {
     wasCalled(1, UniversalMocker.Times.EXACTLY);
   }
 

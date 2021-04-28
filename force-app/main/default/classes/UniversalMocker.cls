@@ -138,6 +138,10 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return this;
   }
 
+  public  void wasCalledOnce() {
+    wasCalled(1, UniversalMocker.Times.EXACTLY);
+  }
+
   public void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
     if (!this.isInAssertMode) {
       throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');

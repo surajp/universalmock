@@ -27,6 +27,7 @@ public with sharing class AccountDomainTest {
     //verify
     system.assertEquals(mockAccount.Name, accountDetail.Name);
     mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalledOnce(); // convenience method for most common verification
   }
 
   @isTest

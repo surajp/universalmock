@@ -82,10 +82,16 @@ to create a chain of methods to mutate method arguments.
 
 ### Verification
 
-- Assert the number of times a method was called.
+- Assert the exact number of times a method was called.
 
   ```java
-  mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.EXACTLY);
+  mockInstance.assertThat().method('getOneAccount').wasCalled(1);
+  mockInstance.assertThat().method('getOneAccount').wasCalled(2);
+  ```
+
+- Assert if the number of times a method was called was more or less than a given integer.
+
+  ```java
   mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.OR_MORE);
   mockInstance.assertThat().method('getOneAccount').wasCalled(1,UniversalMocker.Times.OR_LESS);
   ```

@@ -26,7 +26,7 @@ public with sharing class AccountDomainTest {
 
     //verify
     system.assertEquals(mockAccount.Name, accountDetail.Name);
-    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(1);
   }
 
   @isTest
@@ -64,7 +64,7 @@ public with sharing class AccountDomainTest {
     system.assertEquals(mockAccount.Name, accountDetail.Name);
     mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.OR_MORE);
     mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_MORE);
-    mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(2);
     mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_LESS);
     mockService.assertThat().method(mockedMethodName).wasCalled(3, UniversalMocker.Times.OR_LESS);
     mockService.assertThat().method('mockedDummyMethod').wasNeverCalled();
@@ -89,8 +89,8 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
-    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1, UniversalMocker.Times.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1);
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1);
     Id accountIdParam = (Id) mockService.forMethod(mockedMethodName).andInvocationNumber(0).withParamTypes(new List<Type>{ Id.class }).getValueOf('accountId');
     String acctNameParam = (String) mockService.forMethod(mockedMethodName)
       .andInvocationNumber(0)
@@ -126,7 +126,7 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(1);
     System.assert(hasException, 'Mocked exception was not thrown');
   }
 
@@ -151,7 +151,7 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.TIMES.EXACTLY);
+    mockService.assertThat().method(mockedMethodName).wasCalled(1);
     System.assert(!hasException, 'Mocked exception was not thrown');
     Account acct = (Account) mockService.forMethod('doInsert').getValueOf('acct');
     System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');

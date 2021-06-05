@@ -18,7 +18,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
 
-  private String INVALID_STATE_ERROR_MSG = 'Mocker object state is invalid for this operation. Please refer to the Readme';
   private String KEY_DELIMITER = '||';
 
   //Map for storing mutators
@@ -119,7 +118,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public class GetParamsMode_A extends GetParamsMode_B {
-    public GetParamsMode_A(UniversalMocker parent) {
+    private GetParamsMode_A(UniversalMocker parent) {
       super(parent);
     }
     public GetParamsMode_B withParamTypes(List<Type> paramTypes) {
@@ -129,7 +128,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public virtual class GetParamsMode_B extends GetParamsMode_C {
-    public GetParamsMode_B(UniversalMocker parent) {
+    private GetParamsMode_B(UniversalMocker parent) {
       super(parent);
     }
     public GetParamsMode_C andInvocationNumber(Integer invocation) {
@@ -140,7 +139,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public virtual class GetParamsMode_C {
     UniversalMocker parent;
-    public GetParamsMode_C(UniversalMocker parent) {
+    private GetParamsMode_C(UniversalMocker parent) {
       this.parent = parent;
     }
     public Object getValueOf(String paramName) {

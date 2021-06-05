@@ -52,7 +52,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public class SetupMode_A extends SetupMode_B {
-    public SetupMode_A(UniversalMocker parent) {
+    private SetupMode_A(UniversalMocker parent) {
       super(parent);
     }
     public SetupMode_B withParamTypes(List<Type> paramTypes) {
@@ -63,7 +63,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public virtual class SetupMode_B {
     UniversalMocker parent;
-    public SetupMode_B(UniversalMocker parent) {
+    private SetupMode_B(UniversalMocker parent) {
       this.parent = parent;
     }
     public void thenReturnVoid() {
@@ -83,7 +83,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public class AssertMode_A {
     UniversalMocker parent;
-    public AssertMode_A(UniversalMocker parent) {
+    private AssertMode_A(UniversalMocker parent) {
       this.parent = parent;
     }
     public AssertMode_B method(String methodName) {
@@ -93,7 +93,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public class AssertMode_B extends AssertMode_C {
-    public AssertMode_B(UniversalMocker parent) {
+    private AssertMode_B(UniversalMocker parent) {
       super(parent);
     }
     public AssertMode_C withParamTypes(List<Type> paramTypes) {
@@ -104,7 +104,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   public virtual class AssertMode_C {
     UniversalMocker parent;
-    public AssertMode_C(UniversalMocker parent) {
+    private AssertMode_C(UniversalMocker parent) {
       this.parent = parent;
     }
     public void wasCalled(Integer expectedCallCount, Times assertTypeValue) {

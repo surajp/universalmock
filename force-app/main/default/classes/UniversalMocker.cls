@@ -13,20 +13,29 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private final Map<String, Object> mocksMap = new Map<String, Object>();
   private final Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
-  private Boolean isInSetupMode = false;
-  private Boolean isInAssertMode = false;
-  private Boolean isInGetArgumentMode = false;
-
   private String currentMethodName;
   private String currentParamTypesString;
   private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
 
-  private String INVALID_STATE_ERROR_MSG = 'Mocker object state is invalid for this operation. Please refer to the Readme';
   private String KEY_DELIMITER = '||';
 
   //Map for storing mutators
   Map<String, List<Mutator>> mutatorMap = new Map<String, List<Mutator>>();
+
+  // Inner class instances
+  private SetupMode_A setupAInstance;
+  private AssertMode_A assertAInstance;
+  private AssertMode_B assertBInstance;
+  private GetParamsMode_A getParamsAInstance;
+
+  private enum Modes {
+    SETUP,
+    ASSERT,
+    GETPARAMS
+  }
+
+  /* Begin Public Methods */
 
   public enum Times {
     OR_LESS,
@@ -40,59 +49,112 @@ public with sharing class UniversalMocker implements System.StubProvider {
   public Object createStub() {
     return Test.createStub(this.mockedClass, this);
   }
-  public UniversalMocker when(String stubbedMethodName) {
-    if (this.isAnyModeActive()) {
-      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
+
+  public class SetupMode_A extends SetupMode_B {
+    private SetupMode_A(UniversalMocker parent) {
+      super(parent);
     }
-    this.isInSetupMode = true;
+    public SetupMode_B withParamTypes(List<Type> paramTypes) {
+      this.parent.withParamTypes(paramTypes);
+      return (SetupMode_B) this;
+    }
+  }
+
+  public virtual class SetupMode_B {
+    UniversalMocker parent;
+    private SetupMode_B(UniversalMocker parent) {
+      this.parent = parent;
+    }
+    public void thenReturnVoid() {
+      this.parent.thenReturnVoid();
+    }
+    public void thenReturn(Object returnObject) {
+      this.parent.thenReturn(returnObject);
+    }
+    public SetupMode_B mutateWith(Mutator mutatorInstance) {
+      this.parent.mutateWith(mutatorInstance);
+      return this;
+    }
+    public void thenThrow(Exception exceptionToThrow) {
+      this.parent.thenThrow(exceptionToThrow);
+    }
+  }
+
+  public class AssertMode_A {
+    UniversalMocker parent;
+    private AssertMode_A(UniversalMocker parent) {
+      this.parent = parent;
+    }
+    public AssertMode_B method(String methodName) {
+      parent.method(methodName);
+      return parent.assertBInstance;
+    }
+  }
+
+  public class AssertMode_B extends AssertMode_C {
+    private AssertMode_B(UniversalMocker parent) {
+      super(parent);
+    }
+    public AssertMode_C withParamTypes(List<Type> paramTypes) {
+      parent.withParamTypes(paramTypes);
+      return (AssertMode_C) this;
+    }
+  }
+
+  public virtual class AssertMode_C {
+    UniversalMocker parent;
+    private AssertMode_C(UniversalMocker parent) {
+      this.parent = parent;
+    }
+    public void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
+      parent.wasCalled(expectedCallCount, assertTypeValue);
+    }
+    public void wasCalled(Integer expectedCallCount) {
+      parent.wasCalled(expectedCallCount);
+    }
+    public void wasNeverCalled() {
+      parent.wasNeverCalled();
+    }
+  }
+
+  public class GetParamsMode_A extends GetParamsMode_B {
+    private GetParamsMode_A(UniversalMocker parent) {
+      super(parent);
+    }
+    public GetParamsMode_B withParamTypes(List<Type> paramTypes) {
+      parent.withParamTypes(paramTypes);
+      return (GetParamsMode_B) this;
+    }
+  }
+
+  public virtual class GetParamsMode_B extends GetParamsMode_C {
+    private GetParamsMode_B(UniversalMocker parent) {
+      super(parent);
+    }
+    public GetParamsMode_C andInvocationNumber(Integer invocation) {
+      parent.andInvocationNumber(invocation);
+      return (GetParamsMode_C) this;
+    }
+  }
+
+  public virtual class GetParamsMode_C {
+    UniversalMocker parent;
+    private GetParamsMode_C(UniversalMocker parent) {
+      this.parent = parent;
+    }
+    public Object getValueOf(String paramName) {
+      return parent.getValueOf(paramName);
+    }
+    public Map<String, Object> getArgumentsMap() {
+      return parent.getArgumentsMap();
+    }
+  }
+
+  public SetupMode_A when(String stubbedMethodName) {
     this.currentMethodName = stubbedMethodName;
-    return this;
+    return this.setupAInstance;
   }
 
-  public UniversalMocker withParamTypes(List<Type> paramTypes) {
-    if (!this.isAnyModeActive()) {
-      throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
-    }
-    this.currentParamTypesString = this.getParamTypesString(paramTypes);
-    return this;
-  }
-
-  public UniversalMocker mutateWith(Mutator mutatorInstance) {
-    if (!this.isInSetupMode) {
-      throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
-    }
-    String key = this.getCurrentKey();
-    if (this.mutatorMap.containsKey(key)) {
-      this.mutatorMap.get(key).add(mutatorInstance);
-    } else {
-      this.mutatorMap.put(key, new List<Mutator>{ mutatorInstance });
-    }
-    if (!this.callCountsMap.containsKey(key)) {
-      this.callCountsMap.put(key, 0);
-    }
-    return this;
-  }
-
-  public UniversalMocker thenReturnVoid() {
-    return this.thenReturn(null);
-  }
-
-  public UniversalMocker thenReturn(Object returnObject) {
-    if (!this.isInSetupMode) {
-      throw new InvalidOperationException('Invalid order of operations. Must specify method name to mock/assert first');
-    }
-    String key = this.getCurrentKey();
-    this.mocksMap.put(key, returnObject);
-    if (!this.callCountsMap.containsKey(key)) {
-      this.callCountsMap.put(key, 0);
-    }
-    this.resetState();
-    return this;
-  }
-
-  public UniversalMocker thenThrow(Exception exceptionToThrow) {
-    return this.thenReturn(exceptionToThrow);
-  }
   public Object handleMethodCall(
     Object stubbedObject,
     String stubbedMethodName,
@@ -101,9 +163,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
     List<String> listOfParamNames,
     List<Object> listOfArgs
   ) {
-    if (this.isAnyModeActive()) {
-      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
-    }
     String keyInUse = this.determineKeyToUseForCurrentStubbedMethod(stubbedMethodName, listOfParamTypes);
     this.incrementCallCount(keyInUse);
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
@@ -122,35 +181,71 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return returnValue;
   }
 
-  public UniversalMocker assertThat() {
-    if (this.isAnyModeActive()) {
-      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
-    }
-    this.isInAssertMode = true;
-    return this;
+  public AssertMode_A assertThat() {
+    return this.assertAInstance;
   }
 
-  public UniversalMocker method(String methodName) {
-    if (!this.isInAssertMode) {
-      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
+  public GetParamsMode_A forMethod(String stubbedMethodName) {
+    this.currentMethodName = stubbedMethodName;
+    return this.getParamsAInstance;
+  }
+
+  public class InvalidOperationException extends Exception {
+  }
+
+  public interface Mutator {
+    void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs);
+  }
+
+  /* End Public methods */
+
+  /* Begin Private methods */
+
+  private void withParamTypes(List<Type> paramTypes) {
+    this.currentParamTypesString = this.getParamTypesString(paramTypes);
+  }
+
+  private void mutateWith(Mutator mutatorInstance) {
+    String key = this.getCurrentKey();
+    if (this.mutatorMap.containsKey(key)) {
+      this.mutatorMap.get(key).add(mutatorInstance);
+    } else {
+      this.mutatorMap.put(key, new List<Mutator>{ mutatorInstance });
     }
+    if (!this.callCountsMap.containsKey(key)) {
+      this.callCountsMap.put(key, 0);
+    }
+  }
+
+  private void thenReturnVoid() {
+    this.thenReturn(null);
+  }
+
+  private void thenReturn(Object returnObject) {
+    String key = this.getCurrentKey();
+    this.mocksMap.put(key, returnObject);
+    if (!this.callCountsMap.containsKey(key)) {
+      this.callCountsMap.put(key, 0);
+    }
+  }
+
+  private void thenThrow(Exception exceptionToThrow) {
+    this.thenReturn(exceptionToThrow);
+  }
+
+  private void method(String methodName) {
     this.currentMethodName = methodName;
-    return this;
   }
 
-  public void wasCalled(Integer expectedCallCount) {
+  private void wasCalled(Integer expectedCallCount) {
     wasCalled(expectedCallCount, UniversalMocker.Times.EXACTLY);
   }
 
-  public void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
-    if (!this.isInAssertMode) {
-      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
-    }
+  private void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
     this.expectedCallCount = expectedCallCount;
     String currentKey = this.getCurrentKey();
     Integer actualCallCount = this.callCountsMap.get(currentKey);
     String methodName = this.currentMethodName;
-    this.resetState();
     switch on assertTypeValue {
       when OR_LESS {
         system.assert(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
@@ -164,70 +259,34 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
-  public void wasNeverCalled() {
-    if (!this.isInAssertMode) {
-      throw new InvalidOperationException('Invalid order of operations. Method called without calling assertThat first');
-    }
+  private void wasNeverCalled() {
     String currentKey = this.getCurrentKey();
     Integer actualCallCount = this.callCountsMap.get(currentKey);
     String methodName = this.currentMethodName;
-    this.resetState();
     if (actualCallCount != null) {
       this.expectedCallCount = 0;
       system.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
     }
   }
 
-  public UniversalMocker forMethod(String stubbedMethodName) {
-    if (this.isAnyModeActive()) {
-      throw new InvalidOperationException(INVALID_STATE_ERROR_MSG);
-    }
-    this.isInGetArgumentMode = true;
-    this.currentMethodName = stubbedMethodName;
-    return this;
-  }
-
-  public UniversalMocker andInvocationNumber(Integer invocation) {
-    if (!this.isInGetArgumentMode) {
-      throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
-    }
+  private void andInvocationNumber(Integer invocation) {
     this.forInvocationNumber = invocation;
-    return this;
   }
 
-  public Object getValueOf(String paramName) {
-    if (!this.isInGetArgumentMode) {
-      throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
-    }
+  private Object getValueOf(String paramName) {
     String theKey = this.getCurrentKey();
     Map<String, Object> paramsMap = argumentsMap.get(theKey).get(this.forInvocationNumber);
     if (!paramsMap.containsKey(paramName.toLowerCase())) {
       throw new IllegalArgumentException(String.format('Param name {0} not found for the method {1}', new List<Object>{ paramName, this.currentMethodName }));
     }
     Object returnValue = paramsMap.get(paramName.toLowerCase());
-    this.resetState();
     return returnValue;
   }
 
-  public Object getArgumentsMap() {
-    if (!this.isInGetArgumentMode) {
-      throw new InvalidOperationException('Invalid order of operations. Method called without calling \'forMethod\' first');
-    }
+  private Map<String, Object> getArgumentsMap() {
     String theKey = this.getCurrentKey();
     Map<String, Object> returnValue = this.argumentsMap.get(theKey).get(this.forInvocationNumber);
-    this.resetState();
     return returnValue;
-  }
-
-  public class InvalidOperationException extends Exception {
-  }
-
-  public interface Mutator {
-    void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs);
-  }
-
-  private UniversalMocker(Type mockedClass) {
-    this.mockedClass = mockedClass;
   }
 
   private String getCurrentKey() {
@@ -248,19 +307,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
       classNames.add(paramType.getName());
     }
     return String.join(classNames, '-');
-  }
-
-  private void resetState() {
-    this.currentParamTypesString = null;
-    this.currentMethodName = null;
-    this.isInAssertMode = false;
-    this.isInSetupMode = false;
-    this.isInGetArgumentMode = false;
-    this.forInvocationNumber = 0;
-  }
-
-  private boolean isAnyModeActive() {
-    return this.isInSetupMode || this.isInAssertMode || this.isInGetArgumentMode;
   }
 
   private String determineKeyToUseForCurrentStubbedMethod(String stubbedMethodName, List<Type> listOfParamTypes) {
@@ -289,4 +335,18 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private String getMethodCallCountAssertMessage(String methodName, String comparison) {
     return String.format('Expected call count for method {0} is not {1} to the actual count', new List<String>{ methodName, comparison });
   }
+
+  private UniversalMocker(Type mockedClass) {
+    this.mockedClass = mockedClass;
+    this.initInnerClassInstances();
+  }
+
+  private void initInnerClassInstances() {
+    this.setupAInstance = new SetupMode_A(this);
+    this.assertAInstance = new AssertMode_A(this);
+    this.assertBInstance = new AssertMode_B(this);
+    this.getParamsAInstance = new GetParamsMode_A(this);
+  }
+
+  /* End  Private Methods */
 }

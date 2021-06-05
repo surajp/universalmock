@@ -1,22 +1,21 @@
 @isTest
 public with sharing class AccountDomainTest {
-  
   private static final UniversalMocker mockService;
   private static final AccountDBService mockServiceStub;
   private static final AccountDomain sut; // system under test
-  
+
   static {
     mockService = UniversalMocker.mock(AccountDBService.class);
     mockServiceStub = (AccountDBService) mockService.createStub();
     sut = new AccountDomain(mockServiceStub);
   }
-  
+
   @isTest
   public static void it_should_return_one_account() {
     //setup
     String mockedMethodName = 'getOneAccount';
     Account mockAccount = new Account(Name = 'Mock Account');
-    
+
     mockService.when(mockedMethodName).thenReturn(mockAccount);
 
     //test
@@ -91,10 +90,10 @@ public with sharing class AccountDomainTest {
     //verify
     mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1);
     mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1);
-    Id accountIdParam = (Id) mockService.forMethod(mockedMethodName).andInvocationNumber(0).withParamTypes(new List<Type>{ Id.class }).getValueOf('accountId');
+    Id accountIdParam = (Id) mockService.forMethod(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).andInvocationNumber(0).getValueOf('accountId');
     String acctNameParam = (String) mockService.forMethod(mockedMethodName)
-      .andInvocationNumber(0)
       .withParamTypes(new List<Type>{ String.class })
+      .andInvocationNumber(0)
       .getValueOf('accountName');
 
     System.assertEquals(mockAccountId, accountIdParam);

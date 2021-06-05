@@ -26,13 +26,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   // Inner class instances
   private SetupMode_A setupAInstance;
-  private SetupMode_B setupBInstance;
   private AssertMode_A assertAInstance;
   private AssertMode_B assertBInstance;
-  private AssertMode_C assertCInstance;
   private GetParamsMode_A getParamsAInstance;
-  private GetParamsMode_B getParamsBInstance;
-  private GetParamsMode_C getParamsCInstance;
 
   private enum Modes {
     SETUP,
@@ -60,7 +56,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
       super(parent);
     }
     public SetupMode_B withParamTypes(List<Type> paramTypes) {
-      return (SetupMode_B) this.parent.withParamTypes(paramTypes, Modes.SETUP);
+      this.parent.withParamTypes(paramTypes);
+      return (SetupMode_B) this;
     }
   }
 
@@ -100,7 +97,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
       super(parent);
     }
     public AssertMode_C withParamTypes(List<Type> paramTypes) {
-      return (AssertMode_C) parent.withParamTypes(paramTypes, Modes.ASSERT);
+      parent.withParamTypes(paramTypes);
+      return (AssertMode_C) this;
     }
   }
 
@@ -125,8 +123,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
       super(parent);
     }
     public GetParamsMode_B withParamTypes(List<Type> paramTypes) {
-      parent.withParamTypes(paramTypes, Modes.GETPARAMS);
-      return parent.getParamsBInstance;
+      parent.withParamTypes(paramTypes);
+      return (GetParamsMode_B) this;
     }
   }
 
@@ -136,7 +134,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
     public GetParamsMode_C andInvocationNumber(Integer invocation) {
       parent.andInvocationNumber(invocation);
-      return parent.getParamsCInstance;
+      return (GetParamsMode_C) this;
     }
   }
 
@@ -204,19 +202,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   /* Begin Private methods */
 
-  private Object withParamTypes(List<Type> paramTypes, Modes caller) {
+  private void withParamTypes(List<Type> paramTypes) {
     this.currentParamTypesString = this.getParamTypesString(paramTypes);
-    switch on caller {
-      when SETUP {
-        return this.setupBInstance;
-      }
-      when ASSERT {
-        return this.assertBInstance;
-      }
-      when else {
-        return this.getParamsBInstance;
-      }
-    }
   }
 
   private void mutateWith(Mutator mutatorInstance) {
@@ -357,13 +344,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private void initInnerClassInstances() {
     this.setupAInstance = new SetupMode_A(this);
-    this.setupBInstance = new SetupMode_B(this);
     this.assertAInstance = new AssertMode_A(this);
     this.assertBInstance = new AssertMode_B(this);
-    this.assertCInstance = new AssertMode_C(this);
     this.getParamsAInstance = new GetParamsMode_A(this);
-    this.getParamsBInstance = new GetParamsMode_B(this);
-    this.getParamsCInstance = new GetParamsMode_C(this);
   }
 
   /* End  Private Methods */

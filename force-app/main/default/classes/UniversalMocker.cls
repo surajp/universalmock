@@ -61,7 +61,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public virtual class SetupMode_B {
-    UniversalMocker parent;
+    private final UniversalMocker parent;
     private SetupMode_B(UniversalMocker parent) {
       this.parent = parent;
     }
@@ -81,7 +81,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public class AssertMode_A {
-    UniversalMocker parent;
+    private final UniversalMocker parent;
     private AssertMode_A(UniversalMocker parent) {
       this.parent = parent;
     }
@@ -102,7 +102,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public virtual class AssertMode_C {
-    UniversalMocker parent;
+    private final UniversalMocker parent;
     private AssertMode_C(UniversalMocker parent) {
       this.parent = parent;
     }
@@ -138,7 +138,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public virtual class GetParamsMode_C {
-    UniversalMocker parent;
+    private final UniversalMocker parent;
     private GetParamsMode_C(UniversalMocker parent) {
       this.parent = parent;
     }

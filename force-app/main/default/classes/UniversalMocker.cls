@@ -3,7 +3,7 @@
 *** @author: Suraj Pillai
 *** @group: Test Class
 *** @date: 01/2020
-*** @description: A universal class for mocking in tests. Contains a method for setting the return value for any method. Another method returns the number of times a method was called
+*** @description: A universal class for mocking in tests. Contains a method for setting the return value for any method. Another method returns the number of times a method was called. https://github.com/surajp/universalmock
 
 */
 @isTest
@@ -24,10 +24,10 @@ public with sharing class UniversalMocker implements System.StubProvider {
   Map<String, List<Mutator>> mutatorMap = new Map<String, List<Mutator>>();
 
   // Inner class instances
-  private SetupMode_A setupAInstance;
-  private AssertMode_A assertAInstance;
-  private AssertMode_B assertBInstance;
-  private GetParamsMode_A getParamsAInstance;
+  private SetupMode_Entry setupAInstance;
+  private AssertMode_Entry assertAInstance;
+  private AssertMode_Midway assertBInstance;
+  private GetParamsMode_Entry getParamsAInstance;
 
   private enum Modes {
     SETUP,
@@ -50,19 +50,19 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return Test.createStub(this.mockedClass, this);
   }
 
-  public class SetupMode_A extends SetupMode_B {
-    private SetupMode_A(UniversalMocker parent) {
+  public class SetupMode_Entry extends SetupMode_Midway {
+    private SetupMode_Entry(UniversalMocker parent) {
       super(parent);
     }
-    public SetupMode_B withParamTypes(List<Type> paramTypes) {
+    public SetupMode_Midway withParamTypes(List<Type> paramTypes) {
       this.parent.withParamTypes(paramTypes);
-      return (SetupMode_B) this;
+      return (SetupMode_Midway) this;
     }
   }
 
-  public virtual class SetupMode_B {
+  public virtual class SetupMode_Midway {
     private final UniversalMocker parent;
-    private SetupMode_B(UniversalMocker parent) {
+    private SetupMode_Midway(UniversalMocker parent) {
       this.parent = parent;
     }
     public void thenReturnVoid() {
@@ -71,7 +71,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     public void thenReturn(Object returnObject) {
       this.parent.thenReturn(returnObject);
     }
-    public SetupMode_B mutateWith(Mutator mutatorInstance) {
+    public SetupMode_Midway mutateWith(Mutator mutatorInstance) {
       this.parent.mutateWith(mutatorInstance);
       return this;
     }
@@ -80,30 +80,30 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
-  public class AssertMode_A {
+  public class AssertMode_Entry {
     private final UniversalMocker parent;
-    private AssertMode_A(UniversalMocker parent) {
+    private AssertMode_Entry(UniversalMocker parent) {
       this.parent = parent;
     }
-    public AssertMode_B method(String methodName) {
+    public AssertMode_Midway method(String methodName) {
       parent.method(methodName);
       return parent.assertBInstance;
     }
   }
 
-  public class AssertMode_B extends AssertMode_C {
-    private AssertMode_B(UniversalMocker parent) {
+  public class AssertMode_Midway extends AssertMode_Exit {
+    private AssertMode_Midway(UniversalMocker parent) {
       super(parent);
     }
-    public AssertMode_C withParamTypes(List<Type> paramTypes) {
+    public AssertMode_Exit withParamTypes(List<Type> paramTypes) {
       parent.withParamTypes(paramTypes);
-      return (AssertMode_C) this;
+      return (AssertMode_Exit) this;
     }
   }
 
-  public virtual class AssertMode_C {
+  public virtual class AssertMode_Exit {
     private final UniversalMocker parent;
-    private AssertMode_C(UniversalMocker parent) {
+    private AssertMode_Exit(UniversalMocker parent) {
       this.parent = parent;
     }
     public void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
@@ -117,29 +117,29 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
-  public class GetParamsMode_A extends GetParamsMode_B {
-    private GetParamsMode_A(UniversalMocker parent) {
+  public class GetParamsMode_Entry extends GetParamsMode_Midway {
+    private GetParamsMode_Entry(UniversalMocker parent) {
       super(parent);
     }
-    public GetParamsMode_B withParamTypes(List<Type> paramTypes) {
+    public GetParamsMode_Midway withParamTypes(List<Type> paramTypes) {
       parent.withParamTypes(paramTypes);
-      return (GetParamsMode_B) this;
+      return (GetParamsMode_Midway) this;
     }
   }
 
-  public virtual class GetParamsMode_B extends GetParamsMode_C {
-    private GetParamsMode_B(UniversalMocker parent) {
+  public virtual class GetParamsMode_Midway extends GetParamsMode_Exit {
+    private GetParamsMode_Midway(UniversalMocker parent) {
       super(parent);
     }
-    public GetParamsMode_C andInvocationNumber(Integer invocation) {
+    public GetParamsMode_Exit andInvocationNumber(Integer invocation) {
       parent.andInvocationNumber(invocation);
-      return (GetParamsMode_C) this;
+      return (GetParamsMode_Exit) this;
     }
   }
 
-  public virtual class GetParamsMode_C {
+  public virtual class GetParamsMode_Exit {
     private final UniversalMocker parent;
-    private GetParamsMode_C(UniversalMocker parent) {
+    private GetParamsMode_Exit(UniversalMocker parent) {
       this.parent = parent;
     }
     public Object getValueOf(String paramName) {
@@ -150,7 +150,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
-  public SetupMode_A when(String stubbedMethodName) {
+  public SetupMode_Entry when(String stubbedMethodName) {
     this.currentMethodName = stubbedMethodName;
     return this.setupAInstance;
   }
@@ -181,11 +181,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return returnValue;
   }
 
-  public AssertMode_A assertThat() {
+  public AssertMode_Entry assertThat() {
     return this.assertAInstance;
   }
 
-  public GetParamsMode_A forMethod(String stubbedMethodName) {
+  public GetParamsMode_Entry forMethod(String stubbedMethodName) {
     this.currentMethodName = stubbedMethodName;
     return this.getParamsAInstance;
   }
@@ -342,10 +342,10 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private void initInnerClassInstances() {
-    this.setupAInstance = new SetupMode_A(this);
-    this.assertAInstance = new AssertMode_A(this);
-    this.assertBInstance = new AssertMode_B(this);
-    this.getParamsAInstance = new GetParamsMode_A(this);
+    this.setupAInstance = new SetupMode_Entry(this);
+    this.assertAInstance = new AssertMode_Entry(this);
+    this.assertBInstance = new AssertMode_Midway(this);
+    this.getParamsAInstance = new GetParamsMode_Entry(this);
   }
 
   /* End  Private Methods */

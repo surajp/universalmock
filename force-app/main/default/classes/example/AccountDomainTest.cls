@@ -1,4 +1,4 @@
-@isTest
+@IsTest
 public with sharing class AccountDomainTest {
   private static final UniversalMocker mockService;
   private static final AccountDBService mockServiceStub;
@@ -10,7 +10,7 @@ public with sharing class AccountDomainTest {
     sut = new AccountDomain(mockServiceStub);
   }
 
-  @isTest
+  @IsTest
   public static void it_should_return_one_account() {
     //setup
     String mockedMethodName = 'getOneAccount';
@@ -28,7 +28,7 @@ public with sharing class AccountDomainTest {
     mockService.assertThat().method(mockedMethodName).wasCalled(1);
   }
 
-  @isTest
+  @IsTest
   public static void it_should_create_a_public_account() {
     //setup
     String mockedMethodName = 'doInsert';
@@ -44,7 +44,7 @@ public with sharing class AccountDomainTest {
     system.assertEquals('Public', newAccount.Ownership);
   }
 
-  @isTest
+  @IsTest
   public static void it_should_verify_call_counts_correctly() {
     //setup
     String mockedMethodName = 'getOneAccount';
@@ -70,7 +70,7 @@ public with sharing class AccountDomainTest {
     mockService.assertThat().method('nonMockedDummyMethod').wasNeverCalled();
   }
 
-  @isTest
+  @IsTest
   public static void it_should_call_overloaded_methods_correctly() {
     //setup
     String mockedMethodName = 'getMatchingAccounts';
@@ -102,7 +102,7 @@ public with sharing class AccountDomainTest {
     System.assertEquals(acctTwo.Name, acctsWithMatchingName[0].Name);
   }
 
-  @isTest
+  @IsTest
   public static void it_should_throw_mock_exception() {
     //setup
     String mockedMethodName = 'doInsert';
@@ -129,7 +129,53 @@ public with sharing class AccountDomainTest {
     System.assert(hasException, 'Mocked exception was not thrown');
   }
 
-  @isTest
+  @IsTest
+  public static void it_should_generate_unique_guids() {
+    Integer numInstances = 20000;
+    for (Integer i = 0; i < numInstances; i++) {
+      UniversalMocker uMock = UniversalMocker.mock(AccountDBService.class);
+    }
+    System.assertEquals(numInstances + 1, UniversalMocker.uMockInstances.size(), 'We have collision in the generated guids'); //numInstances + 1 generated in the static block above
+  }
+
+  @IsTest
+  public static void it_should_track_call_counts_across_queueables() {
+    String mockedMethodName = 'doInsert';
+    String mockExceptionMessage = 'Mock exception';
+    UniversalMocker.Mutator dmlMutatorInstance = new DMLMutator();
+
+    mockService.when(mockedMethodName).mutateWith(dmlMutatorInstance).thenReturnVoid();
+    AccountsQueuable queueableSut = new AccountsQueuable(sut);
+
+    //test
+    Test.startTest();
+    System.enqueueJob(queueableSut);
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).wasCalled(1);
+    Account acct = (Account) mockService.forMethod(mockedMethodName).getValueOf('acct');
+    System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');
+  }
+
+  @IsTest
+  public static void it_should_track_call_counts_with_batchables() {
+    String mockedMethodName = 'getOneAccount';
+    Account mockAccount = new Account(Name = 'Mock Account');
+    mockService.when(mockedMethodName).thenReturn(mockAccount);
+
+    AccountsBatch batchableSut = new AccountsBatch(sut);
+
+    //test
+    Test.startTest();
+    Database.executeBatch(batchableSut, 1);
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).wasCalled(1);
+  }
+
+  @IsTest
   public static void it_should_mutate_arguments() {
     //setup
     String mockedMethodName = 'doInsert';
@@ -156,7 +202,7 @@ public with sharing class AccountDomainTest {
     System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');
   }
 
-  @isTest
+  @IsTest
   public static void dummy_test_for_db_service() {
     AccountDBService dbSvc = new AccountDBService();
     Account a = new Account(Name = 'Acme');

@@ -8,10 +8,17 @@
 */
 @isTest
 public with sharing class UniversalMocker implements System.StubProvider {
+  // Map of methodName+paramTypes -> map of (paramname,value) for each invocation
   private final Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
   private final Type mockedClass;
   private final Map<String, Object> mocksMap = new Map<String, Object>();
   private final Map<String, Integer> callCountsMap = new Map<String, Integer>();
+
+  @TestVisible
+  private static final Map<String, UniversalMocker> uMockInstances = new Map<String, UniversalMocker>();
+
+  //even though the 'guid' we are generating is a long (using Crypto.getRandomLong), we keep this a string, to make it easier if we need to switch to an actual guid in the future, and it isn't really costing us anything
+  private String guid;
 
   private String currentMethodName;
   private String currentParamTypesString;
@@ -42,8 +49,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
     OR_MORE,
     EXACTLY
   }
+
   public static UniversalMocker mock(Type mockedClass) {
-    return new UniversalMocker(mockedClass);
+    UniversalMocker uMock = new UniversalMocker(mockedClass);
+    uMockInstances.put(uMock.guid, uMock);
+    return uMock;
   }
 
   public Object createStub() {
@@ -178,6 +188,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     if (returnValue instanceof Exception) {
       throw (Exception) returnValue;
     }
+    this.copyState(); //for async calls, we store the current object instance in a static map so the state is preserved even after leaving the async context
     return returnValue;
   }
 
@@ -244,7 +255,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
     this.expectedCallCount = expectedCallCount;
     String currentKey = this.getCurrentKey();
-    Integer actualCallCount = this.callCountsMap.get(currentKey);
+    //Integer actualCallCount = this.callCountsMap.get(currentKey);
+    Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
     switch on assertTypeValue {
       when OR_LESS {
@@ -261,7 +273,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private void wasNeverCalled() {
     String currentKey = this.getCurrentKey();
-    Integer actualCallCount = this.callCountsMap.get(currentKey);
+    Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
     if (actualCallCount != null) {
       this.expectedCallCount = 0;
@@ -275,7 +287,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private Object getValueOf(String paramName) {
     String theKey = this.getCurrentKey();
-    Map<String, Object> paramsMap = argumentsMap.get(theKey).get(this.forInvocationNumber);
+    Map<String, Object> paramsMap = this.getArgumentsMapInternal().get(theKey).get(this.forInvocationNumber);
     if (!paramsMap.containsKey(paramName.toLowerCase())) {
       throw new IllegalArgumentException(String.format('Param name {0} not found for the method {1}', new List<Object>{ paramName, this.currentMethodName }));
     }
@@ -285,7 +297,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private Map<String, Object> getArgumentsMap() {
     String theKey = this.getCurrentKey();
-    Map<String, Object> returnValue = this.argumentsMap.get(theKey).get(this.forInvocationNumber);
+    Map<String, Object> returnValue = this.getArgumentsMapInternal().get(theKey).get(this.forInvocationNumber);
     return returnValue;
   }
 
@@ -336,9 +348,27 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return String.format('Expected call count for method {0} is not {1} to the actual count', new List<String>{ methodName, comparison });
   }
 
+  private Map<String, Integer> getCallCountsMapInternal() {
+    return uMockInstances.get(this.guid).callCountsMap;
+  }
+
+  private Map<String, List<Map<String, Object>>> getArgumentsMapInternal() {
+    return uMockInstances.get(this.guid).argumentsMap;
+  }
+
+  private void copyState() {
+    uMockInstances.put(this.guid, this);
+  }
+
   private UniversalMocker(Type mockedClass) {
     this.mockedClass = mockedClass;
+    this.guid = this.getGUID();
     this.initInnerClassInstances();
+  }
+
+  private String getGUID() {
+    String guid = Crypto.getRandomLong() + ''; // since guid generation is expensive, we "settle" for this, as it generates unique values and is performant
+    return guid;
   }
 
   private void initInnerClassInstances() {

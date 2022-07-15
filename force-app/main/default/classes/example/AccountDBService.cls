@@ -11,7 +11,7 @@ public with sharing class AccountDBService {
     return [SELECT Name FROM Account WHERE Name = :accountName];
   }
 
-  public void doInsert(Account acct) {
-    insert acct;
+  public Database.SaveResult doInsert(Account acct) {
+    return Database.insert(acct);
   }
 }

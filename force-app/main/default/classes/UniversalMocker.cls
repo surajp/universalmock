@@ -8,10 +8,12 @@
 */
 @isTest
 public with sharing class UniversalMocker implements System.StubProvider {
+  public static final string MISSING_RETURN_VALUE_FOR_NTH_TIME_CALLING = 'Missing the return value definition for the nth time calling where n = {0}.';
+  
   // Map of methodName+paramTypes -> map of (paramname,value) for each invocation
   private final Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
   private final Type mockedClass;
-  private final Map<String, Object> mocksMap = new Map<String, Object>();
+  private final Map<String, Map<Integer, Object>> mocksMap = new Map<String, Map<Integer, Object>>();
   private final Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
   @TestVisible
@@ -24,6 +26,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private String currentParamTypesString;
   private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
+  private Integer onTheNthTime = 1;
+  private boolean setResultsForCallingNTimes = false;
 
   private String KEY_DELIMITER = '||';
 
@@ -77,6 +81,10 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
     public void thenReturnVoid() {
       this.parent.thenReturnVoid();
+    }
+    public SetupMode_Midway isCalledForTheNthTime(Integer n) {
+      this.parent.isCalledForTheNthTime(n);
+      return this;
     }
     public void thenReturn(Object returnObject) {
       this.parent.thenReturn(returnObject);
@@ -175,9 +183,18 @@ public with sharing class UniversalMocker implements System.StubProvider {
   ) {
     String keyInUse = this.determineKeyToUseForCurrentStubbedMethod(stubbedMethodName, listOfParamTypes);
     this.incrementCallCount(keyInUse);
+    Integer currentCallCount = this.callCountsMap.get(keyInUse);
+    Integer countToUse = this.setResultsForCallingNTimes ? currentCallCount : 1;
+    if (this.setResultsForCallingNTimes) {
+      for (Integer i = 1; i <= countToUse; i++) {
+        if (this.mocksMap.get(keyInUse).containsKey(i) == false) {
+          throw new InvalidOperationException(String.format(MISSING_RETURN_VALUE_FOR_NTH_TIME_CALLING, new List<String>{ String.valueOf(i) }));
+        }
+      }
+    }
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
 
-    Object returnValue = this.mocksMap.get(keyInUse);
+    Object returnValue = this.mocksMap.get(keyInUse)?.get(countToUse);
 
     if (this.mutatorMap.containsKey(keyInUse)) {
       for (Mutator m : this.mutatorMap.get(keyInUse)) {
@@ -228,13 +245,24 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
   }
 
+  private void isCalledForTheNthTime(Integer n) {
+    if (n < 1) {
+      throw new IllegalArgumentException('`isCalledForTheNthTime` is only valid for n >= 1');
+    }
+    this.setResultsForCallingNTimes = true;
+    this.onTheNthTime = n;
+  }
+
   private void thenReturnVoid() {
     this.thenReturn(null);
   }
 
   private void thenReturn(Object returnObject) {
     String key = this.getCurrentKey();
-    this.mocksMap.put(key, returnObject);
+    if (this.mocksMap.containsKey(key) == false) {
+      this.mocksMap.put(key, new Map<Integer, Object>());
+    }
+    this.mocksMap.get(key).put(this.onTheNthTime, returnObject);
     if (!this.callCountsMap.containsKey(key)) {
       this.callCountsMap.put(key, 0);
     }

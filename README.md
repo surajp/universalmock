@@ -22,6 +22,13 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   mockInstance.when('getOneAccount').thenReturn(mockAccount);
   ```
 
+- Use the `isCalledForTheNthTime` method to define multiple return values for sequential execution of the same method.
+
+  ```java
+  mockInstance.when('checkIsValid').isCalledForTheNthTime(1).thenReturn(true);
+  mockInstance.when('checkIsValid').isCalledForTheNthTime(2).thenReturn(false);
+  ```
+
 - Use `withParamTypes` for overloaded methods.
 
 ```java

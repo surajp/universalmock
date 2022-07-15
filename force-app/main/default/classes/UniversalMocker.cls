@@ -246,7 +246,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private void isCalledForTheNthTime(Integer n) {
-    if (n < 1) {
+    if (n == null || n < 1) {
       throw new IllegalArgumentException('`isCalledForTheNthTime` is only valid for n >= 1');
     }
     this.setResultsForCallingNTimes = true;

@@ -233,7 +233,7 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    System.assertEquals(null, myException, 'An exception should be thrown because the Database.SaveResult is not successful');
+    System.assertEquals(null, myException, 'An exception should not be thrown because both of the Database.SaveResult were successful');
   }
 
   @IsTest

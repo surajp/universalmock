@@ -31,10 +31,10 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 
 - Use `withParamTypes` for overloaded methods.
 
-```java
+  ```java
   mockInstance.when('getOneAccount').withParamTypes(new List<Type>{Id.class})
               .thenReturn(mockAccount);
-```
+  ```
 
 - You can also set up a method to throw an exception
 

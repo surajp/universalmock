@@ -24,7 +24,7 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    system.assertEquals(mockAccount.Name, accountDetail.Name);
+    System.Assert.areEqual(mockAccount.Name, accountDetail.Name);
     mockService.assertThat().method(mockedMethodName).wasCalled(1);
   }
 
@@ -40,8 +40,8 @@ public with sharing class AccountDomainTest {
 
     //verify
     Account newAccount = (Account) mockService.forMethod(mockedMethodName).andInvocationNumber(0).getValueOf('acct');
-    system.assertEquals('Mock Account', newAccount.Name);
-    system.assertEquals('Public', newAccount.Ownership);
+    System.Assert.areEqual('Mock Account', newAccount.Name);
+    System.Assert.areEqual('Public', newAccount.Ownership);
   }
 
   @IsTest
@@ -60,7 +60,7 @@ public with sharing class AccountDomainTest {
     Test.stopTest();
 
     //verify
-    system.assertEquals(mockAccount.Name, accountDetail.Name);
+    System.Assert.areEqual(mockAccount.Name, accountDetail.Name);
     mockService.assertThat().method(mockedMethodName).wasCalled(1, UniversalMocker.Times.OR_MORE);
     mockService.assertThat().method(mockedMethodName).wasCalled(2, UniversalMocker.Times.OR_MORE);
     mockService.assertThat().method(mockedMethodName).wasCalled(2);
@@ -96,10 +96,10 @@ public with sharing class AccountDomainTest {
       .andInvocationNumber(0)
       .getValueOf('accountName');
 
-    System.assertEquals(mockAccountId, accountIdParam);
-    System.assertEquals('Account with matching name', acctNameParam);
-    System.assertEquals(acctOne.Name, acctsWithMatchingId[0].Name);
-    System.assertEquals(acctTwo.Name, acctsWithMatchingName[0].Name);
+    System.Assert.areEqual(mockAccountId, accountIdParam);
+    System.Assert.areEqual('Account with matching name', acctNameParam);
+    System.Assert.areEqual(acctOne.Name, acctsWithMatchingId[0].Name);
+    System.Assert.areEqual(acctTwo.Name, acctsWithMatchingName[0].Name);
   }
 
   @IsTest
@@ -119,14 +119,14 @@ public with sharing class AccountDomainTest {
     try {
       sut.createPublicAccount('Mock Account');
     } catch (AuraHandledException ex) {
-      System.assertEquals(mockExceptionMessage, ex.getMessage());
+      System.Assert.areEqual(mockExceptionMessage, ex.getMessage());
       hasException = true;
     }
     Test.stopTest();
 
     //verify
     mockService.assertThat().method(mockedMethodName).wasCalled(1);
-    System.assert(hasException, 'Mocked exception was not thrown');
+    System.Assert.isTrue(hasException, 'Mocked exception was not thrown');
   }
 
   @IsTest
@@ -135,7 +135,7 @@ public with sharing class AccountDomainTest {
     for (Integer i = 0; i < numInstances; i++) {
       UniversalMocker uMock = UniversalMocker.mock(AccountDBService.class);
     }
-    System.assertEquals(numInstances + 1, UniversalMocker.uMockInstances.size(), 'We have collision in the generated guids'); //numInstances + 1 generated in the static block above
+    System.Assert.areEqual(numInstances + 1, UniversalMocker.uMockInstances.size(), 'We have collision in the generated guids'); //numInstances + 1 generated in the static block above
   }
 
   @IsTest
@@ -155,7 +155,7 @@ public with sharing class AccountDomainTest {
     //verify
     mockService.assertThat().method(mockedMethodName).wasCalled(1);
     Account acct = (Account) mockService.forMethod(mockedMethodName).getValueOf('acct');
-    System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');
+    System.Assert.areNotEqual(null, acct.Id, 'Account Id is null after insert');
   }
 
   @IsTest
@@ -190,16 +190,16 @@ public with sharing class AccountDomainTest {
     try {
       sut.createPublicAccount('Mock Account');
     } catch (AuraHandledException ex) {
-      System.assertEquals(mockExceptionMessage, ex.getMessage());
+      System.Assert.areEqual(mockExceptionMessage, ex.getMessage());
       hasException = true;
     }
     Test.stopTest();
 
     //verify
     mockService.assertThat().method(mockedMethodName).wasCalled(1);
-    System.assert(!hasException, 'Mocked exception was not thrown');
+    System.Assert.isTrue(!hasException, 'Mocked exception was not thrown');
     Account acct = (Account) mockService.forMethod('doInsert').getValueOf('acct');
-    System.assertNotEquals(null, acct.Id, 'Account Id is null after insert');
+    System.Assert.areNotEqual(null, acct.Id, 'Account Id is null after insert');
   }
 
   @IsTest

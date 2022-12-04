@@ -260,13 +260,13 @@ public with sharing class UniversalMocker implements System.StubProvider {
     String methodName = this.currentMethodName;
     switch on assertTypeValue {
       when OR_LESS {
-        system.assert(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
+        System.Assert.isTrue(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
       }
       when OR_MORE {
-        system.assert(this.expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
+        System.Assert.isTrue(this.expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
       }
       when else {
-        system.assertEquals(this.expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
+        System.Assert.areEqual(this.expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
       }
     }
   }
@@ -277,7 +277,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
     String methodName = this.currentMethodName;
     if (actualCallCount != null) {
       this.expectedCallCount = 0;
-      system.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
+      System.Assert.areEqual(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
     }
   }
 

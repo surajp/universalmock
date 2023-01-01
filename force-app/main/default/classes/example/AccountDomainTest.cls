@@ -5,9 +5,9 @@ public with sharing class AccountDomainTest {
   private static final AccountDomain sut; // system under test
 
   static {
-    mockService = UniversalMocker.mock(AccountDBService.class);
+    mockService = UniversalMocker.mock(AccountDBService.class); //This is the service we are mocking
     mockServiceStub = (AccountDBService) mockService.createStub();
-    sut = new AccountDomain(mockServiceStub);
+    sut = new AccountDomain(mockServiceStub); //This is the class into which we inject our mocked service
   }
 
   @IsTest
@@ -100,6 +100,32 @@ public with sharing class AccountDomainTest {
     System.assertEquals('Account with matching name', acctNameParam);
     System.assertEquals(acctOne.Name, acctsWithMatchingId[0].Name);
     System.assertEquals(acctTwo.Name, acctsWithMatchingName[0].Name);
+  }
+
+  @IsTest
+  public static void shouldResetMethodAndParamsAfterEachChain() {
+    //setup
+    String mockedMethodName = 'getMatchingAccounts';
+    String newMethodName = 'getOneAccount';
+    Account acctOne = new Account(Name = 'Account with matching Id');
+    Account acctTwo = new Account(Name = 'Account with matching name');
+
+    mockService.when(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).thenReturn(new List<Account>{ acctOne });
+    mockService.when(newMethodName).thenReturn(acctTwo); //This method takes no params. So by mocking this we attempt to ensure that the param type list from previous mock call (Id.class) has been cleared out
+
+    //test
+    Test.startTest();
+    Id mockAccountId = '001000000000001';
+    List<Account> acctsWithMatchingId = sut.getMatchingAccounts(mockAccountId);
+    Account anotherAccount = sut.getAccountDetail();
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(1);
+    mockService.assertThat().method(newMethodName).wasCalled(1);
+
+    System.assertEquals(acctOne.Name, acctsWithMatchingId[0].Name);
+    System.assertEquals(acctTwo.Name, anotherAccount.Name);
   }
 
   @IsTest

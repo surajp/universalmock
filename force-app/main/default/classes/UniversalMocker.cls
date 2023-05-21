@@ -386,6 +386,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   private void reset() {
     this.currentParamTypesString = '';
     this.currentMethodName = '';
+    this.forInvocationNumber = 0;
   }
 
   /* End  Private Methods */

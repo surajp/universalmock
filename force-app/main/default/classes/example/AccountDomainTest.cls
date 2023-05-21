@@ -126,6 +126,11 @@ public with sharing class AccountDomainTest {
 
     System.assertEquals(acctOne.Name, acctsWithMatchingId[0].Name);
     System.assertEquals(acctTwo.Name, anotherAccount.Name);
+
+    Id acctIdParam = (Id) mockService.forMethod(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).getValueOf('accountId');
+    Map<String, Object> argsMap = mockService.forMethod(newMethodName).getArgumentsMap();
+    Assert.areEqual(mockAccountId, acctIdParam);
+    Assert.areEqual(0, argsMap.size());
   }
 
   @IsTest

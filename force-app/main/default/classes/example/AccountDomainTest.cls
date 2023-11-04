@@ -269,6 +269,7 @@ public with sharing class AccountDomainTest {
     Account mockAccountTwo = new Account(Name = 'Mock Account Two');
     Account mockAccountThree = new Account(Name = 'Mock Account Three');
 
+    //returns mockAccountOne for the first call, mockAccountTwo for the next 2 calls, and mockAccountThree for all subsequent calls
     mockService.when(mockedMethodName).thenReturnUntil(1, mockAccountOne).thenReturnUntil(3, mockAccountTwo).thenReturn(mockAccountThree);
 
     //test

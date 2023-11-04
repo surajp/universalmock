@@ -234,6 +234,112 @@ public with sharing class AccountDomainTest {
   }
 
   @IsTest
+  public static void it_should_handle_multiple_return_values_basic() {
+    //setup
+    String mockedMethodName = 'getOneAccount';
+    Account mockAccountOne = new Account(Name = 'Mock Account One');
+    Account mockAccountTwo = new Account(Name = 'Mock Account Two');
+
+    mockService.when(mockedMethodName).thenReturnUntil(1, mockAccountOne).thenReturn(mockAccountTwo);
+
+    //test
+    Test.startTest();
+    Account accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountOne.Name, accountDetail.Name);
+
+    accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountTwo.Name, accountDetail.Name);
+
+    //should return mockAccountTwo for all subsequent calls
+    for (Integer i = 0; i < 100; i++) {
+      accountDetail = sut.getAccountDetail();
+    }
+    Assert.areEqual(mockAccountTwo.Name, accountDetail.Name);
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).wasCalled(102);
+  }
+
+  @IsTest
+  public static void it_should_handle_multiple_return_values_advanced() {
+    //setup
+    String mockedMethodName = 'getOneAccount';
+    Account mockAccountOne = new Account(Name = 'Mock Account One');
+    Account mockAccountTwo = new Account(Name = 'Mock Account Two');
+    Account mockAccountThree = new Account(Name = 'Mock Account Three');
+
+    mockService.when(mockedMethodName).thenReturnUntil(1, mockAccountOne).thenReturnUntil(3, mockAccountTwo).thenReturn(mockAccountThree);
+
+    //test
+    Test.startTest();
+    Account accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountOne.Name, accountDetail.Name);
+
+    accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountTwo.Name, accountDetail.Name);
+
+    accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountTwo.Name, accountDetail.Name);
+
+    accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountThree.Name, accountDetail.Name);
+
+    //should return mockAccountTwo for all subsequent calls
+    for (Integer i = 0; i < 100; i++) {
+      accountDetail = sut.getAccountDetail();
+    }
+    Assert.areEqual(mockAccountThree.Name, accountDetail.Name);
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).wasCalled(104);
+  }
+
+  @IsTest
+  public static void it_should_handle_multiple_return_values_exception() {
+    //setup
+    String mockedMethodName = 'getOneAccount';
+    Account mockAccountOne = new Account(Name = 'Mock Account One');
+
+    String mockExceptionMessage = 'Mock exception';
+    AuraHandledException mockException = new AuraHandledException(mockExceptionMessage);
+    mockException.setMessage(mockExceptionMessage);
+
+    mockService.when(mockedMethodName).thenThrowUntil(2, mockException).thenReturn(mockAccountOne);
+
+    //test
+    Test.startTest();
+
+    try {
+      Account accountDetail = sut.getAccountDetail();
+      Assert.fail('Expected exception to be thrown');
+    } catch (AuraHandledException ex) {
+      Assert.areEqual(mockExceptionMessage, ex.getMessage());
+    }
+
+    try {
+      Account accountDetail = sut.getAccountDetail();
+      Assert.fail('Expected exception to be thrown');
+    } catch (AuraHandledException ex) {
+      Assert.areEqual(mockExceptionMessage, ex.getMessage());
+    }
+
+    Account accountDetail = sut.getAccountDetail();
+    Assert.areEqual(mockAccountOne.Name, accountDetail.Name);
+
+    //should return mockAccountTwo for all subsequent calls
+    for (Integer i = 0; i < 100; i++) {
+      accountDetail = sut.getAccountDetail();
+    }
+    Assert.areEqual(mockAccountOne.Name, accountDetail.Name);
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).wasCalled(103);
+  }
+
+  @IsTest
   public static void dummy_test_for_db_service() {
     AccountDBService dbSvc = new AccountDBService();
     Account a = new Account(Name = 'Acme');

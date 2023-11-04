@@ -6,7 +6,7 @@
 *** @description: A universal class for mocking in tests. Contains a method for setting the return value for any method. Another method returns the number of times a method was called. https://github.com/surajp/universalmock
 
 */
-@isTest
+@IsTest
 public with sharing class UniversalMocker implements System.StubProvider {
   // Map of methodName+paramTypes -> map of (paramname,value) for each invocation
   private final Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
@@ -177,6 +177,7 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public InitialSetupState when(String stubbedMethodName) {
+    this.reset();
     this.currentMethodName = stubbedMethodName;
     return this.setupAInstance;
   }
@@ -208,10 +209,12 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   public InitialValidationState assertThat() {
+    this.reset();
     return this.assertAInstance;
   }
 
   public InitialParamValidationState forMethod(String stubbedMethodName) {
+    this.reset();
     this.currentMethodName = stubbedMethodName;
     return this.getParamsAInstance;
   }
@@ -255,8 +258,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
     }
     if (this.callCountToMock != null) {
       this.callCountToMock = null;
-    } else {
-      this.reset();
     }
   }
 
@@ -288,7 +289,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
     //Integer actualCallCount = this.callCountsMap.get(currentKey);
     Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
-    this.reset();
     switch on assertTypeValue {
       when OR_LESS {
         system.assert(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
@@ -306,7 +306,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
     String currentKey = this.getCurrentKey();
     Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
-    this.reset();
     if (actualCallCount != null) {
       this.expectedCallCount = 0;
       System.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
@@ -324,14 +323,12 @@ public with sharing class UniversalMocker implements System.StubProvider {
       throw new IllegalArgumentException(String.format('Param name {0} not found for the method {1}', new List<Object>{ paramName, this.currentMethodName }));
     }
     Object returnValue = paramsMap.get(paramName.toLowerCase());
-    this.reset();
     return returnValue;
   }
 
   private Map<String, Object> getArgumentsMap() {
     String theKey = this.getCurrentKey();
     Map<String, Object> returnValue = this.getArgumentsMapInternal().get(theKey).get(this.forInvocationNumber);
-    this.reset();
     return returnValue;
   }
 

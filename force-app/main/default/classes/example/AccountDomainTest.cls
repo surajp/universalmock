@@ -340,6 +340,55 @@ public with sharing class AccountDomainTest {
   }
 
   @IsTest
+  public static void it_should_call_overloaded_methods_multiple_return_values() {
+    //setup
+    String mockedMethodName = 'getMatchingAccounts';
+    Account acctByIdOne = new Account(Name = 'Account with matching Id One');
+    Account acctByIdTwo = new Account(Name = 'Account with matching Id Two');
+    Account acctByNameOne = new Account(Name = 'Account with matching name');
+
+    mockService.when(mockedMethodName)
+      .withParamTypes(new List<Type>{ Id.class })
+      .thenReturnUntil(2, new List<Account>{ acctByIdOne })
+      .thenReturn(new List<Account>{ acctByIdTwo });
+    mockService.when(mockedMethodName).withParamTypes(new List<Type>{ String.class }).thenReturn(new List<Account>{ acctByNameOne });
+
+    //test
+    Test.startTest();
+    Id mockAccountId = '001000000000001';
+    List<Account> acctsWithMatchingId = sut.getMatchingAccounts(mockAccountId);
+    Assert.areEqual(acctByIdOne.Name, acctsWithMatchingId[0].Name);
+
+    acctsWithMatchingId = sut.getMatchingAccounts(mockAccountId);
+    Assert.areEqual(acctByIdOne.Name, acctsWithMatchingId[0].Name);
+
+    acctsWithMatchingId = sut.getMatchingAccounts(mockAccountId);
+    Assert.areEqual(acctByIdTwo.Name, acctsWithMatchingId[0].Name);
+
+    for (Integer i = 0; i < 100; i++) {
+      acctsWithMatchingId = sut.getMatchingAccounts(mockAccountId);
+    }
+
+    List<Account> acctsWithMatchingName = sut.getMatchingAccounts('Account with matching name');
+    Test.stopTest();
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).wasCalled(103);
+    mockService.assertThat().method(mockedMethodName).withParamTypes(new List<Type>{ String.class }).wasCalled(1);
+
+    Id accountIdParam = (Id) mockService.forMethod(mockedMethodName).withParamTypes(new List<Type>{ Id.class }).andInvocationNumber(50).getValueOf('accountId');
+    String acctNameParam = (String) mockService.forMethod(mockedMethodName)
+      .withParamTypes(new List<Type>{ String.class })
+      .andInvocationNumber(0)
+      .getValueOf('accountName');
+
+    Assert.areEqual(mockAccountId, accountIdParam);
+    Assert.areEqual('Account with matching name', acctNameParam);
+    Assert.areEqual(acctByIdTwo.Name, acctsWithMatchingId[0].Name);
+    Assert.areEqual(acctByNameOne.Name, acctsWithMatchingName[0].Name);
+  }
+
+  @IsTest
   public static void dummy_test_for_db_service() {
     AccountDBService dbSvc = new AccountDBService();
     Account a = new Account(Name = 'Acme');

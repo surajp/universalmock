@@ -41,6 +41,35 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
   AccountDBService mockDBService = (AccountDBService)mockInstance.createStub();
   ```
 
+#### Sequential Mocks
+
+There might be instances where you may need the same method to mock different return values within the same test when
+testing utility methods or selector classes and such. You can specify different return values based on the call count
+in such cases
+
+- Basic example
+
+```java
+  mockInstance.when('getOneAccount').thenReturnUntil(3,mockAccountOne).thenReturn(mockAccountTwo);
+```
+
+Here, `mockAccountOne` is returned the first 3 times `getOneAccount` is called. All subsequent calls to `getOneAccount`
+will return `mockAccountTwo`
+
+- You can also pair it with param types or to mock exceptions
+
+```java
+  mockInstance.when('getOneAccount').withParamTypes(new List<Type>{Id.class})
+    .thenReturnUntil(1,mockAccountOne)
+    .thenThrowUntil(3,mockException)
+    .thenReturn(mockAccountTwo);
+```
+
+Refer to the [relevant unit tests](force-app/main/default/classes/example/AccountDomainTest.cls#L265) for further
+clarity
+
+**Note**: It is recommended that you end all setup method call chains with `thenReturn` or `thenThrow`
+
 #### Mutating arguments
 
 There might be instances where you need to modify the original arguments passed into the function. A typical example

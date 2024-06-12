@@ -9,12 +9,12 @@
 @IsTest
 public with sharing class UniversalMocker implements System.StubProvider {
   // Map of methodName+paramTypes -> map of (paramname,value) for each invocation
-  private final Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
+  private Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
   private final Type mockedClass;
-  private final Map<String, Object> mocksMap = new Map<String, Object>();
-  private final Map<String, List<Integer>> returnUntilMap = new Map<String, List<Integer>>();
-  private final Map<String, List<Integer>> mutateUntilMap = new Map<String, List<Integer>>();
-  private final Map<String, Integer> callCountsMap = new Map<String, Integer>();
+  private Map<String, Object> mocksMap = new Map<String, Object>();
+  private Map<String, List<Integer>> returnUntilMap = new Map<String, List<Integer>>();
+  private Map<String, List<Integer>> mutateUntilMap = new Map<String, List<Integer>>();
+  private Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
   @TestVisible
   private static final Map<String, UniversalMocker> uMockInstances = new Map<String, UniversalMocker>();
@@ -24,7 +24,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private String currentMethodName;
   private String currentParamTypesString;
-  private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
   private Integer callCountToMock = null;
 
@@ -223,6 +222,17 @@ public with sharing class UniversalMocker implements System.StubProvider {
     void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs);
   }
 
+  public void resetState() {
+    this.reset();
+    this.argumentsMap = new Map<String, List<Map<String, Object>>>();
+    this.mocksMap = new Map<String, Object>();
+    this.returnUntilMap = new Map<String, List<Integer>>();
+    this.mutateUntilMap = new Map<String, List<Integer>>();
+    this.callCountsMap = new Map<String, Integer>();
+    this.mutatorMap = new Map<String, List<Mutator>>();
+    this.initInnerClassInstances();
+  }
+
   /* End Public methods */
 
   /* Begin Private methods */
@@ -236,6 +246,9 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.putMutatorValue(key, mutatorInstance);
     if (!this.callCountsMap.containsKey(key)) {
       this.callCountsMap.put(key, 0);
+    }
+    if (this.callCountToMock != null) {
+      this.callCountToMock = null;
     }
   }
 
@@ -282,20 +295,19 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
-    this.expectedCallCount = expectedCallCount;
     String currentKey = this.getCurrentKey();
     //Integer actualCallCount = this.callCountsMap.get(currentKey);
     Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
     switch on assertTypeValue {
       when OR_LESS {
-        system.assert(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
+        system.assert(expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
       }
       when OR_MORE {
-        system.assert(this.expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
+        system.assert(expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
       }
       when else {
-        system.assertEquals(this.expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
+        system.assertEquals(expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
       }
     }
   }
@@ -305,8 +317,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
     Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
     if (actualCallCount != null) {
-      this.expectedCallCount = 0;
-      System.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
+      Integer expectedCallCount = 0;
+      System.assertEquals(expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
     }
   }
 

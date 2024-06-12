@@ -10,6 +10,8 @@ A universal mocking class for Apex, built using the [Apex Stub API](https://deve
 
 ### Setup
 
+#### Basic Setup
+
 - Create an instance of `UniversalMocker` for each class you want to mock.
 
   ```java
@@ -70,7 +72,7 @@ clarity
 
 **Note**: It is recommended that you end all setup method call chains with `thenReturn` or `thenThrow`
 
-#### Mutating arguments
+#### Mutating Arguments
 
 There might be instances where you need to modify the original arguments passed into the function. A typical example
 would be to set the `Id` field of records passed into a method responsible for inserting them.
@@ -97,18 +99,68 @@ Here's the method for setting fake ids on inserted records, in our example.
   }
 ```
 
-Check out the [AccountDomainTest](./force-app/main/default/classes/example/AccountDomainTest.cls#L187) class for the
-full example.
-
-- Pass in an instance of your implementation of the `Mutator` class to mutate the method arguments. Check out the
-  complete test method [here](./force-app/main/default/classes/example/AccountDomainTest.cls#L146)
+- Pass in an instance of your implementation of the `Mutator` class to mutate the method arguments.
 
 ```java
   mockInstance.when('doInsert').mutateWith(dmlMutatorInstance).thenReturnVoid();
 ```
 
-**Note**: You can call the `mutateWith` method any number of times in succession, with the same or different mutator instances,
+Check out the [AccountDomainTest](./force-app/main/default/classes/example/AccountDomainTest.cls#L244) class for the
+full example.
+
+You can call the `mutateWith` method any number of times in succession, with the same or different mutator instances,
 to create a chain of methods to mutate method arguments.
+
+#### Sequential Mutators
+
+You can also use specific mutators based on call count. Multiple mutators with the same value of call count will be
+accumulated and applied in succession for all calls since the previous established call count.
+
+For example, lets say you have a `DescriptionMutator` class as shown below. It appends a given string to the `Account
+Description` field.
+
+```java
+  //Adds a given suffix to account description
+  public class DescriptionMutator implements UniversalMocker.Mutator {
+    private String stringToAdd = '';
+    public DescriptionMutator(String stringToAdd) {
+      this.stringToAdd = stringToAdd;
+    }
+    public void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs) {
+      Account record = (Account) listOfArgs[0];
+      if (record.get('Description') != null) {
+        record.Description += this.stringToAdd;
+      } else {
+        record.Description = this.stringToAdd;
+      }
+    }
+  }
+```
+
+If you wanted to append the string `12` to the Account Description for the first 2 calls and then the string `3` for all subsequent
+calls, your setup would look something like:
+
+```java
+mockService.when(mockedMethodName).mutateUntil(2, new DescriptionMutator('1')).mutateUntil(2, new DescriptionMutator('2'))
+.mutateWith(new DescriptionMutator('3'));
+```
+
+or
+
+```java
+mockService.when(mockedMethodName).mutateUntil(2, new DescriptionMutator('12')).mutateWith(new DescriptionMutator('3'));
+```
+
+If you wanted to append the string `1` to the Account Description for the first call, the string `2` for the second call,
+and string `3` for all subsequent calls, your setup would look as follows:
+
+```java
+mockService.when(mockedMethodName).mutateUntil(1, new DescriptionMutator('1')).mutateUntil(2, new DescriptionMutator('2'))
+.mutateWith(new DescriptionMutator('3'));
+```
+
+Check out the [AccountDomainTest](./force-app/main/default/classes/example/AccountDomainTest.cls#L193) class for the
+full example.
 
 ### Verification
 

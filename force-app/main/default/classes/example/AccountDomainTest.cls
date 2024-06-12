@@ -190,6 +190,40 @@ public with sharing class AccountDomainTest {
   }
 
   @IsTest
+  public static void shouldApplyMutatorsBasedOnCallCounts() {
+    String mockedMethodName = 'doUpdate';
+    String mockExceptionMessage = 'Mock exception';
+    UniversalMocker.Mutator dmlMutatorInstance = new DMLMutator();
+
+    mockService.when(mockedMethodName).mutateUntil(1, new DescriptionMutator('1')).thenReturnVoid();
+
+    Account acct = new Account(Name = 'Acme Inc');
+    sut.updateAccount(acct);
+    sut.updateAccount(acct);
+    sut.updateAccount(acct);
+
+    //verify
+    mockService.assertThat().method(mockedMethodName).wasCalled(3);
+    Assert.areEqual('1', acct.Description, 'Expected description to only be set once (till callcount 1)');
+
+    mockService.resetState();
+    acct.Description = ''; //reset account description
+    mockService.when(mockedMethodName)
+      .mutateUntil(2, new DescriptionMutator('1'))
+      .mutateUntil(2, new DescriptionMutator('2'))
+      .mutateWith(new DescriptionMutator('3'))
+      .thenReturnVoid();
+    sut.updateAccount(acct);
+    sut.updateAccount(acct);
+    sut.updateAccount(acct);
+    Assert.areEqual(
+      '12123',
+      acct.Description,
+      'Expected description to set to "12123" ("12" appended for each of the first two calls and "3" appended for the third call'
+    );
+  }
+
+  @IsTest
   public static void it_should_track_call_counts_with_batchables() {
     String mockedMethodName = 'getOneAccount';
     Account mockAccount = new Account(Name = 'Mock Account');
@@ -397,6 +431,22 @@ public with sharing class AccountDomainTest {
     dbSvc.getOneAccount();
     dbSvc.getMatchingAccounts(Id.valueOf('001000000000001'));
     dbSvc.getMatchingAccounts('Acme');
+  }
+
+  //Adds a given suffix to account description
+  public class DescriptionMutator implements UniversalMocker.Mutator {
+    private String stringToAdd = '';
+    public DescriptionMutator(String stringToAdd) {
+      this.stringToAdd = stringToAdd;
+    }
+    public void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs) {
+      Account record = (Account) listOfArgs[0];
+      if (record.get('Description') != null) {
+        record.Description += this.stringToAdd;
+      } else {
+        record.Description = this.stringToAdd;
+      }
+    }
   }
 
   public class DMLMutator implements UniversalMocker.Mutator {

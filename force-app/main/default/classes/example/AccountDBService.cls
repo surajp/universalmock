@@ -14,4 +14,8 @@ public with sharing class AccountDBService {
   public void doInsert(Account acct) {
     insert acct;
   }
+
+  public void doUpdate(Account acct) {
+    update acct;
+  }
 }

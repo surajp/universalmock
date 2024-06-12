@@ -9,11 +9,12 @@
 @IsTest
 public with sharing class UniversalMocker implements System.StubProvider {
   // Map of methodName+paramTypes -> map of (paramname,value) for each invocation
-  private final Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
+  private Map<String, List<Map<String, Object>>> argumentsMap = new Map<String, List<Map<String, Object>>>();
   private final Type mockedClass;
-  private final Map<String, Object> mocksMap = new Map<String, Object>();
-  private final Map<String, List<Integer>> returnUntilMap = new Map<String, List<Integer>>();
-  private final Map<String, Integer> callCountsMap = new Map<String, Integer>();
+  private Map<String, Object> mocksMap = new Map<String, Object>();
+  private Map<String, List<Integer>> returnUntilMap = new Map<String, List<Integer>>();
+  private Map<String, List<Integer>> mutateUntilMap = new Map<String, List<Integer>>();
+  private Map<String, Integer> callCountsMap = new Map<String, Integer>();
 
   @TestVisible
   private static final Map<String, UniversalMocker> uMockInstances = new Map<String, UniversalMocker>();
@@ -23,7 +24,6 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private String currentMethodName;
   private String currentParamTypesString;
-  private Integer expectedCallCount;
   private Integer forInvocationNumber = 0;
   private Integer callCountToMock = null;
 
@@ -62,22 +62,12 @@ public with sharing class UniversalMocker implements System.StubProvider {
     return Test.createStub(this.mockedClass, this);
   }
 
-  public class InitialSetupState extends IntermediateSetupState {
+  public class InitialSetupState extends FinalSetupState {
     private InitialSetupState(UniversalMocker parent) {
       super(parent);
     }
-    public IntermediateSetupState withParamTypes(List<Type> paramTypes) {
+    public FinalSetupState withParamTypes(List<Type> paramTypes) {
       this.parent.withParamTypes(paramTypes);
-      return (IntermediateSetupState) this;
-    }
-  }
-
-  public virtual class IntermediateSetupState extends FinalSetupState {
-    private IntermediateSetupState(UniversalMocker parent) {
-      super(parent);
-    }
-    public FinalSetupState mutateWith(Mutator mutatorInstance) {
-      this.parent.mutateWith(mutatorInstance);
       return (FinalSetupState) this;
     }
   }
@@ -86,6 +76,14 @@ public with sharing class UniversalMocker implements System.StubProvider {
     private final UniversalMocker parent;
     private FinalSetupState(UniversalMocker parent) {
       this.parent = parent;
+    }
+    public FinalSetupState mutateUntil(Integer callCount, Mutator mutatorInstance) {
+      this.parent.mutateUntil(callCount, mutatorInstance);
+      return this;
+    }
+    public FinalSetupState mutateWith(Mutator mutatorInstance) {
+      this.parent.mutateWith(mutatorInstance);
+      return this;
     }
     public void thenReturnVoid() {
       this.parent.thenReturnVoid();
@@ -194,10 +192,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
     this.incrementCallCount(keyInUse);
     this.saveArguments(listOfParamNames, listOfArgs, keyInUse);
 
-    if (this.mutatorMap.containsKey(keyInUse)) {
-      for (Mutator m : this.mutatorMap.get(keyInUse)) {
-        m.mutate(stubbedObject, stubbedMethodName, listOfParamTypes, listOfArgs);
-      }
+    for (Mutator m : this.getApplicableMutators(keyInUse)) {
+      m.mutate(stubbedObject, stubbedMethodName, listOfParamTypes, listOfArgs);
     }
 
     Object returnValue = this.getMockValue(keyInUse);
@@ -226,6 +222,17 @@ public with sharing class UniversalMocker implements System.StubProvider {
     void mutate(Object stubbedObject, String stubbedMethodName, List<Type> listOfParamTypes, List<Object> listOfArgs);
   }
 
+  public void resetState() {
+    this.reset();
+    this.argumentsMap = new Map<String, List<Map<String, Object>>>();
+    this.mocksMap = new Map<String, Object>();
+    this.returnUntilMap = new Map<String, List<Integer>>();
+    this.mutateUntilMap = new Map<String, List<Integer>>();
+    this.callCountsMap = new Map<String, Integer>();
+    this.mutatorMap = new Map<String, List<Mutator>>();
+    this.initInnerClassInstances();
+  }
+
   /* End Public methods */
 
   /* Begin Private methods */
@@ -236,13 +243,12 @@ public with sharing class UniversalMocker implements System.StubProvider {
 
   private void mutateWith(Mutator mutatorInstance) {
     String key = this.getCurrentKey();
-    if (this.mutatorMap.containsKey(key)) {
-      this.mutatorMap.get(key).add(mutatorInstance);
-    } else {
-      this.mutatorMap.put(key, new List<Mutator>{ mutatorInstance });
-    }
+    this.putMutatorValue(key, mutatorInstance);
     if (!this.callCountsMap.containsKey(key)) {
       this.callCountsMap.put(key, 0);
+    }
+    if (this.callCountToMock != null) {
+      this.callCountToMock = null;
     }
   }
 
@@ -259,6 +265,11 @@ public with sharing class UniversalMocker implements System.StubProvider {
     if (this.callCountToMock != null) {
       this.callCountToMock = null;
     }
+  }
+
+  private void mutateUntil(Integer callCount, Mutator mutatorInstance) {
+    this.callCountToMock = callCount;
+    this.mutateWith(mutatorInstance);
   }
 
   private void thenReturnUntil(Integer callCount, Object returnObject) {
@@ -284,20 +295,19 @@ public with sharing class UniversalMocker implements System.StubProvider {
   }
 
   private void wasCalled(Integer expectedCallCount, Times assertTypeValue) {
-    this.expectedCallCount = expectedCallCount;
     String currentKey = this.getCurrentKey();
     //Integer actualCallCount = this.callCountsMap.get(currentKey);
     Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
     switch on assertTypeValue {
       when OR_LESS {
-        system.assert(this.expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
+        system.assert(expectedCallCount >= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'less than or equal'));
       }
       when OR_MORE {
-        system.assert(this.expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
+        system.assert(expectedCallCount <= actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'more than or equal'));
       }
       when else {
-        system.assertEquals(this.expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
+        system.assertEquals(expectedCallCount, actualCallCount, this.getMethodCallCountAssertMessage(methodName, 'equal'));
       }
     }
   }
@@ -307,8 +317,8 @@ public with sharing class UniversalMocker implements System.StubProvider {
     Integer actualCallCount = this.getCallCountsMapInternal().get(currentKey);
     String methodName = this.currentMethodName;
     if (actualCallCount != null) {
-      this.expectedCallCount = 0;
-      System.assertEquals(this.expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
+      Integer expectedCallCount = 0;
+      System.assertEquals(expectedCallCount, actualCallCount, String.format('Method {0} was called 1 or more times', new List<String>{ methodName }));
     }
   }
 
@@ -356,6 +366,38 @@ public with sharing class UniversalMocker implements System.StubProvider {
       }
     }
     return this.mocksMap.get(key);
+  }
+
+  private List<Mutator> getApplicableMutators(String key) {
+    if (this.mutateUntilMap.containsKey(key)) {
+      Integer callCount = this.callCountsMap.get(key);
+      List<Integer> mutateUntilList = this.mutateUntilMap.get(key);
+      mutateUntilList.sort();
+      for (Integer mutateUntil : mutateUntilList) {
+        if (mutateUntil >= callCount) {
+          key = key + '-' + mutateUntil;
+          break;
+        }
+      }
+    }
+    if (this.mutatorMap.containsKey(key)) {
+      return this.mutatorMap.get(key);
+    }
+    return new List<Mutator>();
+  }
+
+  private void putMutatorValue(String key, Mutator mutatorInstance) {
+    if (this.callCountToMock != null) {
+      if (!this.mutateUntilMap.containsKey(key)) {
+        this.mutateUntilMap.put(key, new List<Integer>{});
+      }
+      this.mutateUntilMap.get(key).add(this.callCountToMock);
+      key = key + '-' + callCountToMock;
+    }
+    if (!this.mutatorMap.containsKey(key)) {
+      this.mutatorMap.put(key, new List<Mutator>());
+    }
+    this.mutatorMap.get(key).add(mutatorInstance);
   }
 
   private void putMockValue(String key, Object value) {
